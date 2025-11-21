@@ -52,6 +52,27 @@ fun MainContent(navController: NavHostController) {
     val totalPrice by cartViewModel.totalPrice.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
+    
+    // Verificar autenticación y redirigir a Login si no está autenticado
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    
+    LaunchedEffect(isAuthenticated, currentRoute) {
+        // Si no está autenticado y no está en Login o Register, redirigir a Login
+        if (!isAuthenticated && currentRoute != Screen.Login.route && currentRoute != Screen.Register.route) {
+            navController.navigate(Screen.Login.route) {
+                // Limpiar el back stack para que no pueda volver atrás sin autenticarse
+                popUpTo(0) { inclusive = true }
+            }
+        }
+        // Si está autenticado y está en Login o Register, redirigir a Home
+        else if (isAuthenticated && (currentRoute == Screen.Login.route || currentRoute == Screen.Register.route)) {
+            navController.navigate(Screen.Home.route) {
+                // Limpiar el back stack para que no pueda volver a Login
+                popUpTo(0) { inclusive = true }
+            }
+        }
+    }
     // DEBUG: Log para ver si cartViewModel está cambiando
     val snackbarMessageRaw = cartViewModel.snackbarMessage
     val snackbarMessage by snackbarMessageRaw.collectAsState()
@@ -87,12 +108,14 @@ fun MainContent(navController: NavHostController) {
         }
     }
     
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    
     val showTopBar = when(currentRoute) {
         Screen.Home.route, Screen.Products.route, Screen.Cart.route, Screen.Account.route -> true
         else -> false
+    }
+    
+    val showBottomBar = when(currentRoute) {
+        Screen.Login.route, Screen.Register.route -> false
+        else -> true
     }
     
     val configuration = LocalConfiguration.current
@@ -133,6 +156,10 @@ fun MainContent(navController: NavHostController) {
                     onLogout = {
                         coroutineScope.launch { drawerState.close() }
                         authViewModel.logout()
+                        // Redirigir a Login después de cerrar sesión
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     },
                     onCloseDrawer = {
                         coroutineScope.launch { drawerState.close() }
@@ -155,7 +182,9 @@ fun MainContent(navController: NavHostController) {
                     }
                 },
                 bottomBar = {
-                    BottomNavBar(navController = navController)
+                    if (showBottomBar) {
+                        BottomNavBar(navController = navController)
+                    }
                 },
                 snackbarHost = {
                     SnackbarHost(hostState = snackbarHostState)

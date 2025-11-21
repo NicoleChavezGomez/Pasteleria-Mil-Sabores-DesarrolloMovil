@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.milsaborestest.R
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
@@ -28,7 +27,7 @@ import com.example.milsaborestest.util.Constants.Design
 @Composable
 fun AccountScreen(
     onNavigateToLogin: () -> Unit,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
@@ -144,7 +143,10 @@ fun AccountScreen(
                 MenuOptionItem(
                     icon = Icons.Filled.ExitToApp,
                     title = "Cerrar Sesión",
-                    onClick = { authViewModel.logout() }
+                    onClick = { 
+                        authViewModel.logout()
+                        onNavigateToLogin()
+                    }
                 )
             }
         }

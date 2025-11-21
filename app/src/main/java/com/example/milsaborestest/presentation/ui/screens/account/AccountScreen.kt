@@ -17,10 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-<<<<<<< HEAD
 import androidx.lifecycle.viewmodel.compose.viewModel
-=======
->>>>>>> feature/login
 import com.example.milsaborestest.R
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite

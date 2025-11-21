@@ -26,7 +26,7 @@ fun MilSaboresNavGraph(
     Box(modifier = modifier) {
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route
+            startDestination = Screen.Login.route
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(
@@ -133,7 +133,11 @@ fun MilSaboresNavGraph(
             composable(Screen.Login.route) {
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.popBackStack()
+                        // Navegar a Home después de login exitoso
+                        navController.navigate(Screen.Home.route) {
+                            // Limpiar el back stack para que no pueda volver a Login
+                            popUpTo(0) { inclusive = true }
+                        }
                     },
                     onNavigateToRegister = {
                         navController.navigate(Screen.Register.route)
@@ -144,7 +148,11 @@ fun MilSaboresNavGraph(
             composable(Screen.Register.route) {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        navController.popBackStack()
+                        // Navegar a Home después de registro exitoso
+                        navController.navigate(Screen.Home.route) {
+                            // Limpiar el back stack para que no pueda volver a Register
+                            popUpTo(0) { inclusive = true }
+                        }
                     },
                     onNavigateToLogin = {
                         navController.navigate(Screen.Login.route)

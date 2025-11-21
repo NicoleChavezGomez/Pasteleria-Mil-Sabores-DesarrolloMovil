@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import android.util.Log
@@ -47,32 +48,15 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainContent(navController: NavHostController) {
     val cartViewModel: CartViewModel = hiltViewModel()
-    val authViewModel: AuthViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = viewModel()
     val totalItems by cartViewModel.totalItems.collectAsState()
     val totalPrice by cartViewModel.totalPrice.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
     
-    // Verificar autenticación y redirigir a Login si no está autenticado
+    // Sin protección de rutas - como PokeStore, puedes navegar sin autenticación
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    
-    LaunchedEffect(isAuthenticated, currentRoute) {
-        // Si no está autenticado y no está en Login o Register, redirigir a Login
-        if (!isAuthenticated && currentRoute != Screen.Login.route && currentRoute != Screen.Register.route) {
-            navController.navigate(Screen.Login.route) {
-                // Limpiar el back stack para que no pueda volver atrás sin autenticarse
-                popUpTo(0) { inclusive = true }
-            }
-        }
-        // Si está autenticado y está en Login o Register, redirigir a Home
-        else if (isAuthenticated && (currentRoute == Screen.Login.route || currentRoute == Screen.Register.route)) {
-            navController.navigate(Screen.Home.route) {
-                // Limpiar el back stack para que no pueda volver a Login
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
     // DEBUG: Log para ver si cartViewModel está cambiando
     val snackbarMessageRaw = cartViewModel.snackbarMessage
     val snackbarMessage by snackbarMessageRaw.collectAsState()

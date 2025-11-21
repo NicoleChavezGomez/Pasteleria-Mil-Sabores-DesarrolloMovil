@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
@@ -32,7 +32,7 @@ import com.example.milsaborestest.util.Constants.Design
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = viewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -166,7 +166,7 @@ fun RegisterScreen(
                     Button(
                         onClick = {
                             if (password == confirmPassword && password.length >= 6 && email.isNotBlank() && name.isNotBlank()) {
-                                viewModel.login(email, password) // Reutilizar la función de login para simular registro
+                                viewModel.register(nombre = name, email = email, password = password)
                             }
                         },
                         modifier = Modifier

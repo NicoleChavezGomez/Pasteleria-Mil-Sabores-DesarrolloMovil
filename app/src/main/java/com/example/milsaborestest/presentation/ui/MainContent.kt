@@ -54,6 +54,8 @@ fun MainContent(navController: NavHostController) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
     
+    // Debug: Log del estado de autenticación
+    Log.d(Constants.TAG, "MainContent - isAuthenticated: $isAuthenticated, user: ${user?.name}")
     // Sin protección de rutas - como PokeStore, puedes navegar sin autenticación
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -177,6 +179,7 @@ fun MainContent(navController: NavHostController) {
                 MilSaboresNavGraph(
                     navController = navController,
                     cartViewModel = cartViewModel,
+                    authViewModel = authViewModel,
                     modifier = Modifier.padding(paddingValues)
                 )
             }

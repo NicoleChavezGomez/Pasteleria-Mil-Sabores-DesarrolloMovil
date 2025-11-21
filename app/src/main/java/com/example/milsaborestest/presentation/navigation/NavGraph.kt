@@ -15,12 +15,14 @@ import com.example.milsaborestest.presentation.ui.screens.login.LoginScreen
 import com.example.milsaborestest.presentation.ui.screens.productdetail.ProductDetailScreen
 import com.example.milsaborestest.presentation.ui.screens.products.AllProductsScreen
 import com.example.milsaborestest.presentation.ui.screens.register.RegisterScreen
+import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 
 @Composable
 fun MilSaboresNavGraph(
     navController: NavHostController,
     cartViewModel: CartViewModel,
+    authViewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -105,7 +107,8 @@ fun MilSaboresNavGraph(
                 AccountScreen(
                     onNavigateToLogin = {
                         navController.navigate(Screen.Login.route)
-                    }
+                    },
+                    authViewModel = authViewModel
                 )
             }
             
@@ -141,7 +144,8 @@ fun MilSaboresNavGraph(
                     },
                     onNavigateToRegister = {
                         navController.navigate(Screen.Register.route)
-                    }
+                    },
+                    viewModel = authViewModel
                 )
             }
             
@@ -156,7 +160,8 @@ fun MilSaboresNavGraph(
                     },
                     onNavigateToLogin = {
                         navController.navigate(Screen.Login.route)
-                    }
+                    },
+                    viewModel = authViewModel
                 )
             }
         }

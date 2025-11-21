@@ -110,7 +110,7 @@ fun MainContent(navController: NavHostController) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.width((screenWidthDp * 0.5f).dp)
+                modifier = Modifier.width((screenWidthDp * 0.75f).dp)
             ) {
                 NavigationDrawerContent(
                     isAuthenticated = isAuthenticated,
@@ -252,14 +252,6 @@ fun TopNavBar(
                     }
                 }
                 
-                IconButton(onClick = onMenuClick) {
-                    Icon(
-                        Icons.Filled.Menu,
-                        contentDescription = "Menú",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                
                 BadgedBox(badge = {
                     if (totalItems > 0) {
                         Badge {
@@ -274,6 +266,14 @@ fun TopNavBar(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
+                }
+                
+                IconButton(onClick = onMenuClick) {
+                    Icon(
+                        Icons.Filled.Menu,
+                        contentDescription = "Menú",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }

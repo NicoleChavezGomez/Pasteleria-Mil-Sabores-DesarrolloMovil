@@ -4,10 +4,9 @@ Aplicación móvil Android desarrollada con Jetpack Compose para la gestión de 
 
 ## 👥 Estudiantes
 
-<!-- Completar con los nombres reales de los estudiantes -->
-- [Nombre Estudiante 1]
-- [Nombre Estudiante 2]
-- [Nombre Estudiante 3]
+- Nicolás Barra
+- Nicole Chavez
+- Matías Ampuero
 
 ## 📱 Descripción del Proyecto
 
@@ -206,9 +205,9 @@ La aplicación requiere los siguientes permisos:
 
 ## 📝 Notas de Desarrollo
 
-- El proyecto sigue el patrón de acceso directo a base de datos desde ViewModels (sin Hilt)
+- El proyecto sigue el patrón de acceso directo a base de datos desde ViewModels 
 - Los productos se cargan desde un archivo JSON en `assets/productos.json`
-- La autenticación no persiste entre sesiones (patrón in-memory como PokeStore)
+- La autenticación no persiste entre sesiones
 - El carrito se persiste en Room Database
 
 ## 🐛 Solución de Problemas
@@ -230,7 +229,7 @@ La aplicación requiere los siguientes permisos:
 
 ## 📄 Licencia
 
-Este proyecto es parte de un trabajo académico para el curso de Desarrollo Móvil.
+Este proyecto es parte de un trabajo académico para la asignatura de Desarrollo de Aplicaciones Móviles - DUOC UC Puente Alto.
 
 ## 👨‍💻 Contribuciones
 
@@ -238,5 +237,5 @@ Este es un proyecto académico. Para contribuciones o sugerencias, contactar a l
 
 ---
 
-**Desarrollado con ❤️ usando Jetpack Compose y Material Design 3**
+**Desarrollado usando Jetpack Compose y Material Design 3**
 

@@ -181,6 +181,26 @@ Tareas completadas y validadas.
   - Ramas para features (feature/login, feature/basedatos)
   - Merge a main
 
+### ✅ Documentación
+- [x] **Crear README.md completo** ⚠️ OBLIGATORIO
+  - Archivo creado en raíz del proyecto
+  - Descripción del proyecto completa
+  - Nombres de estudiantes incluidos
+  - Funcionalidades implementadas documentadas
+  - Instrucciones de ejecución detalladas
+  - Tecnologías utilizadas listadas
+  - Estructura del proyecto documentada
+
+### ✅ Mejoras de UI/UX
+- [x] **Reorganizar TopNavBar: Mover hamburger menu a la derecha**
+  - Menú hamburger movido a la derecha del TopNavBar
+  - Posicionado después del carrito en el Row derecho
+  - Funcionalidad verificada
+
+- [x] **Aumentar ancho del Sidebar de 50% a 75%**
+  - ModalDrawerSheet configurado con `0.75f` del ancho de pantalla
+  - Implementado en `MainContent.kt` línea 113
+
 ---
 
 ## 🟠 Code Review
@@ -211,28 +231,11 @@ Tareas completadas y validadas.
 
 ### 🚧 En Progreso - Tareas Críticas para Evaluación
 
-- [x] **Crear README.md completo** ⚠️ OBLIGATORIO
-  - **Ubicación**: Archivo en raíz del proyecto `README.md`
-  - **Contenido requerido**:
-    - Descripción del proyecto (app de pastelería e-commerce)
-    - Nombres de estudiantes (completar con datos reales)
-    - Funcionalidades implementadas (listar todas las pantallas y features)
-    - Instrucciones de ejecución:
-      - Requisitos (Android Studio, JDK, etc.)
-      - Pasos para clonar y ejecutar
-      - Configuración de emulador/dispositivo
-    - Tecnologías utilizadas:
-      - Kotlin, Jetpack Compose, Material 3
-      - Room Database, MVVM Architecture
-      - Navigation Compose, Coroutines, StateFlow
-  - **Formato**: Markdown con secciones claras
-  - **Ejemplo de estructura**: Ver README.md de proyectos similares en GitHub
-
-- [ ] **Implementar recursos nativos - Fase mínima (Notificaciones + Cámara)** 🔴 CRÍTICO
+- [ ] **Implementar recursos nativos - Fase mínima (Notificaciones + Galería)** 🔴 CRÍTICO
   - **Contexto**: Requisito crítico del encargo - al menos 2 recursos nativos
   - **Recursos a implementar**:
     1. Notificaciones: Recordatorio de carrito abandonado
-    2. Cámara: Foto de perfil de usuario
+    2. Galería: Foto de perfil de usuario (seleccionar de galería)
   - **Archivos principales a modificar/crear**:
     - `AndroidManifest.xml` (permisos)
     - `NotificationHelper.kt` (nuevo)
@@ -313,24 +316,21 @@ Tareas completadas y validadas.
     - Usar `NotificationHelper.showCartReminderNotification()`
   - **Testing**: Probar agregando items, saliendo de app, verificando notificación
 
-#### Cámara y Foto de Perfil
-- [ ] **Configurar permisos de cámara en AndroidManifest**
+#### Galería y Foto de Perfil
+- [ ] **Configurar permisos de galería en AndroidManifest**
   - **Archivo**: `app/src/main/AndroidManifest.xml`
   - **Permisos a agregar** dentro de `<manifest>`:
     ```xml
-    <!-- Cámara -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    
-    <!-- Almacenamiento (para guardar imágenes) -->
+    <!-- Almacenamiento (para leer imágenes de la galería) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
                      android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     ```
   - **Notas**:
-    - `READ_EXTERNAL_STORAGE` solo para Android 12 y anteriores
+    - `READ_EXTERNAL_STORAGE` solo para Android 12 y anteriores (API 32-)
     - `READ_MEDIA_IMAGES` para Android 13+ (API 33+)
-    - `android:required="false"` permite que la app funcione en dispositivos sin cámara
+    - **NO se requiere permiso de cámara** - solo lectura de medios
+    - **Ventaja**: Más simple que cámara, no requiere FileProvider
   - **Verificar**: Permisos antes de `<application>`
 
 - [ ] **Modificar UserEntity para foto de perfil**
@@ -369,28 +369,31 @@ Tareas completadas y validadas.
        ```kotlin
        .addMigrations(MIGRATION_2_3)
        ```
-    4. Remover `fallbackToDestructiveMigration()` o mantenerlo solo para desarrollo
-  - **Testing**: Verificar que usuarios existentes no pierden datos
-  - **Nota**: Si usas `fallbackToDestructiveMigration()`, la migración no se ejecutará en desarrollo
+    4. No Remover `fallbackToDestructiveMigration()` porque es solo para mostralo una vez para presentarlo. 
 
 - [ ] **Crear imágenes por defecto en drawable**
   - **Ubicación**: `app/src/main/res/drawable/`
   - **Imágenes a crear**:
-    - `ic_profile_default.xml` o `ic_profile_default.png` - Avatar por defecto para usuarios
-    - `ic_product_default.xml` o `ic_product_default.png` - Imagen por defecto para productos
-  - **Recomendación**: Usar vector drawable (XML) para mejor escalado
-  - **Diseño**: Iconos simples y consistentes con el tema de la app
+    - `ic_profile_default.png` - Avatar por defecto para usuarios
+    - `ic_product_default.png` - Imagen por defecto para productos
+  - **Diseño**: Se agregaran unas imagenes en drawable para este fin
   - **Uso**: Se usarán cuando no haya foto o falle la carga
 
 - [ ] **Implementar ImageHelper/ImageManager**
   - **Ubicación**: `app/src/main/java/com/example/milsaborestest/util/ImageHelper.kt`
   - **Responsabilidades**:
-    - Guardar imagen capturada en storage interno
+    - Guardar imagen seleccionada de galería en storage interno
     - Leer imagen desde storage
     - Convertir entre Bitmap, File, y URI
     - Manejar errores y casos edge
   - **Implementación**:
     - Clase `object ImageHelper`
+    - Función `uriToBitmap(context: Context, uri: Uri): Bitmap?`
+      - Convertir URI de galería a Bitmap
+      - Usar `context.contentResolver.openInputStream(uri)`
+      - Usar `BitmapFactory.decodeStream()`
+      - Retornar Bitmap o null si falla
+      - Manejar excepciones (FileNotFoundException, IOException)
     - Función `saveProfileImage(context: Context, bitmap: Bitmap, userId: Int): String?`
       - Guardar en `context.filesDir` o `context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)`
       - Nombre: "profile_${userId}.jpg"
@@ -409,40 +412,43 @@ Tareas completadas y validadas.
     - **Externo** (`getExternalFilesDir`): Accesible por usuario, se elimina con la app
     - Recomendación: Usar storage interno para privacidad
   - **Manejo de errores**: Todas las funciones deben manejar excepciones y retornar null/false en caso de error
-  - **Dependencias**: `android.graphics.Bitmap`, `java.io.File`
+  - **Dependencias**: `android.graphics.Bitmap`, `android.net.Uri`, `android.content.ContentResolver`, `java.io.File`
 
-- [ ] **Implementar ActivityResultLauncher para cámara**
+- [ ] **Implementar ActivityResultLauncher para galería**
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/account/AccountScreen.kt`
   - **Implementación**:
-    - Crear `rememberLauncherForActivityResult` con `ActivityResultContracts.TakePicture()`
-    - Necesitarás crear un `File` temporal con URI usando `FileProvider`
-    - Configurar `FileProvider` en `AndroidManifest.xml`:
-      ```xml
-      <provider
-          android:name="androidx.core.content.FileProvider"
-          android:authorities="${applicationId}.fileprovider"
-          android:exported="false"
-          android:grantUriPermissions="true">
-          <meta-data
-              android:name="android.support.FILE_PROVIDER_PATHS"
-              android:resource="@xml/file_paths" />
-      </provider>
-      ```
-    - Crear `res/xml/file_paths.xml`:
-      ```xml
-      <paths>
-          <external-files-path name="images" path="Pictures/" />
-      </paths>
+    - Crear `rememberLauncherForActivityResult` con `ActivityResultContracts.PickVisualMedia()`
+    - **Ventaja**: No requiere FileProvider ni archivos temporales
+    - Configurar para seleccionar solo imágenes:
+      ```kotlin
+      val pickMedia = rememberLauncherForActivityResult(
+          contract = ActivityResultContracts.PickVisualMedia()
+      ) { uri ->
+          // uri es null si el usuario canceló
+          if (uri != null) {
+              // Procesar imagen seleccionada
+          }
+      }
       ```
   - **Flujo**:
-    1. Usuario presiona botón "Tomar foto"
+    1. Usuario presiona botón "Seleccionar foto" o "Cambiar foto"
     2. Verificar permisos (usar `rememberPermissionState` o `ActivityResultLauncher`)
-    3. Si tiene permisos → Crear File temporal → Lanzar cámara
-    4. En callback → Obtener Bitmap → Guardar con ImageHelper → Actualizar UserEntity
+    3. Si tiene permisos → Lanzar selector de galería con `pickMedia.launch(PickVisualMediaRequest(...))`
+    4. En callback → Obtener URI → Convertir a Bitmap → Guardar con ImageHelper → Actualizar UserEntity
   - **Manejo de permisos**:
-    - Usar `ActivityResultContracts.RequestPermission()` para Android 13+
-    - Para versiones anteriores, permisos en tiempo de instalación
+    - Usar `ActivityResultContracts.RequestPermission()` para Android 13+ (READ_MEDIA_IMAGES)
+    - Para Android 12 y anteriores, usar READ_EXTERNAL_STORAGE
+    - **Nota**: En Android 13+, el sistema puede manejar permisos automáticamente con PickVisualMedia
   - **Dependencias**: `androidx.activity:activity-compose` (ya incluida)
+  - **Código de ejemplo**:
+    ```kotlin
+    // Lanzar selector de galería
+    pickMedia.launch(
+        PickVisualMediaRequest(
+            ActivityResultContracts.PickVisualMedia.ImageOnly
+        )
+    )
+    ```
 
 - [ ] **Actualizar AccountScreen con foto de perfil y manejo de errores**
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/account/AccountScreen.kt`
@@ -464,7 +470,7 @@ Tareas completadas y validadas.
       )
       ```
     - Agregar botón "Editar foto" o hacer el avatar clickeable
-    - Al hacer click → Lanzar ActivityResultLauncher de cámara
+    - Al hacer click → Lanzar ActivityResultLauncher de galería
   - **UI**:
     - Avatar circular de 100.dp
     - Botón flotante pequeño para editar (opcional)
@@ -534,8 +540,8 @@ Tareas completadas y validadas.
     - Considerar función `loadUserProfile()` que carga foto desde storage
     - Validar que la ruta existe antes de guardar en BD
   - **Flujo**:
-    1. Usuario toma foto en AccountScreen
-    2. AccountScreen guarda imagen con ImageHelper
+    1. Usuario selecciona imagen de galería en AccountScreen
+    2. AccountScreen convierte URI a Bitmap y guarda imagen con ImageHelper
     3. Si guardado exitoso → AccountScreen llama `authViewModel.updateProfilePhoto(ruta)`
     4. Si guardado falla → Mostrar error, no actualizar BD
     5. AuthViewModel actualiza UserEntity en BD
@@ -584,34 +590,6 @@ Tareas completadas y validadas.
   - **Documentación**: Agregar sección en README sobre planificación
 
 #### 🎨 Mejoras de UI/UX (Opcional - Mejora experiencia)
-- [ ] **Reorganizar TopNavBar: Mover hamburger menu a la derecha**
-  - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt`
-  - **Función**: `TopNavBar`
-  - **Cambio actual**:
-    - Menú hamburger está a la izquierda (después del logo)
-    - Carrito está a la derecha
-  - **Cambio deseado**:
-    - Mover menú hamburger al lugar donde está el carrito (derecha)
-    - El carrito puede moverse a otro lugar o mantenerse junto al menú
-  - **Implementación**:
-    - En el `Row` de la derecha (línea ~234), cambiar el orden de los `IconButton`
-    - Opción 1: Menú hamburger primero, luego carrito
-    - Opción 2: Solo menú hamburger a la derecha, carrito se puede quitar (ya está en bottom bar)
-    - Mantener el precio total si se muestra
-  - **Consideraciones**: Verificar que el click del menú sigue funcionando correctamente
-
-- [ ] **Aumentar ancho del Sidebar de 50% a 75%**
-  - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt`
-  - **Línea actual**: `Modifier.width((screenWidthDp * 0.5f).dp)` (línea ~113)
-  - **Cambio**: Cambiar a `Modifier.width((screenWidthDp * 0.75f).dp)`
-  - **Implementación**:
-    - Modificar `ModalDrawerSheet` dentro de `ModalNavigationDrawer`
-    - Cambiar el multiplicador de `0.5f` a `0.75f`
-  - **Consideraciones**:
-    - Verificar que el contenido del drawer se vea bien con más espacio
-    - Ajustar padding/spacing si es necesario
-    - Probar en diferentes tamaños de pantalla
-
 - [ ] **Implementar pantalla de Splash con logo de Mil Sabores**
   - **Contexto**: Pantalla inicial que se muestra al abrir la app, con el logo de la pastelería
   - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/splash/SplashScreen.kt`
@@ -646,246 +624,26 @@ Tareas completadas y validadas.
 
 ---
 
-### 🟢 PRIORIDAD BAJA - Tareas Post-Evaluación (No críticas para el encargo)
-
-#### 📱 Recursos Nativos - Funcionalidades Futuras (Post-evaluación)
-- [ ] **Implementar acceso a Galería**
-  - **Contexto**: Para seleccionar imágenes existentes en lugar de tomar foto
-  - **Archivo**: Similar a implementación de cámara
-  - **Permisos**: Mismos que cámara (READ_MEDIA_IMAGES)
-  - **ActivityResultLauncher**: Usar `ActivityResultContracts.PickVisualMedia()`
-  - **Integración**: Agregar opción en AccountScreen: "Tomar foto" o "Seleccionar de galería"
-  - **Uso futuro**: Para reseñas con imágenes
-
-- [ ] **Implementar reseñas con imágenes**
-  - **Contexto**: Permitir que usuarios suban fotos con sus reseñas
-  - **Modificaciones**:
-    - `Review` domain model: Agregar `imagenUri: String?`
-    - Crear `ReviewEntity` en Room (migrar de JSON a BD)
-    - `ReviewDao` con operaciones CRUD
-    - Formulario de reseña con opción de subir imagen
-  - **UI**: Mostrar imágenes en `ReviewItem` en ProductDetailScreen
-  - **Storage**: Guardar imágenes de reseñas en carpeta separada
-
-- [ ] **Implementar acceso a Ubicación**
-  - **Contexto**: Para direcciones de entrega y pastelerías cercanas
-  - **Permisos**: `ACCESS_FINE_LOCATION` o `ACCESS_COARSE_LOCATION`
-  - **Implementación**: Usar Fused Location Provider API
-  - **UI**: Formulario de dirección con botón "Usar mi ubicación actual"
-  - **Consideraciones**: Solicitar permisos en runtime, manejar denegación
-
-### 🧪 Testing y Calidad (Post-evaluación)
-- [ ] **Tests unitarios para ViewModels**
-  - **Contexto**: Validar lógica de negocio sin UI
-  - **Archivos a crear**:
-    - `AuthViewModelTest.kt`
-    - `CartViewModelTest.kt`
-    - `ProductViewModelTest.kt`
-  - **Implementación**:
-    - Usar `androidx.arch.core:core-testing` para LiveData/StateFlow
-    - Usar `org.jetbrains.kotlinx:kotlinx-coroutines-test` para coroutines
-    - Mock de repositorios y use cases
-  - **Casos de prueba**:
-    - Login exitoso/fallido
-    - Agregar/eliminar del carrito
-    - Validaciones de formularios
-  - **Ubicación**: `app/src/test/java/com/example/milsaborestest/`
-
-- [ ] **Tests de UI**
-  - **Contexto**: Validar comportamiento de componentes Compose
-  - **Archivos**: Tests para pantallas principales
-  - **Implementación**:
-    - Usar `androidx.compose.ui:ui-test-junit4`
-    - Usar `createComposeRule()` para tests
-    - Verificar que elementos se muestran correctamente
-    - Simular interacciones (click, scroll)
-  - **Casos**: Navegación, formularios, listas
-
-### 📝 Documentación Técnica (Post-evaluación)
-- [ ] **Documentar arquitectura**
-  - **Formato**: Diagrama o documento Markdown
-  - **Contenido**:
-    - Diagrama de capas (Data, Domain, Presentation)
-    - Flujo de datos (UI → ViewModel → Repository → DataSource)
-    - Decisiones de diseño (por qué MVVM, por qué Room, etc.)
-  - **Ubicación**: `docs/ARCHITECTURE.md` o sección en README
-  - **Herramientas**: Mermaid para diagramas, o imágenes
-
-- [ ] **Documentar componentes**
-  - **Contexto**: KDoc/Javadoc para funciones y clases públicas
-  - **Archivos**: Todos los componentes principales
-  - **Formato**:
-    ```kotlin
-    /**
-     * Componente que muestra una tarjeta de producto.
-     * 
-     * @param product El producto a mostrar
-     * @param onItemClick Callback cuando se hace click en el producto
-     */
-    @Composable
-    fun ProductCard(...)
-    ```
-  - **Prioridad**: ViewModels, Repositories, Componentes reutilizables
-
-### 🚀 Funcionalidades Futuras
-- [ ] **Sistema de favoritos**
-  - **Entidad**: `FavoriteEntity` en Room (userId, productId)
-  - **DAO**: `FavoriteDao` con queries para obtener favoritos de usuario
-  - **UI**: Botón de corazón en ProductCard y ProductDetailScreen
-  - **Integración**: Agregar a AccountScreen como opción de menú
-  - **Persistencia**: Guardar en Room, sincronizar con estado de UI
-
-- [ ] **Historial de pedidos**
-  - **Entidad**: `OrderEntity` en Room (id, userId, fecha, total, items)
-  - **DAO**: `OrderDao` con queries por usuario y fecha
-  - **Pantalla**: `OrderHistoryScreen` con lista de pedidos
-  - **Detalle**: `OrderDetailScreen` mostrando items del pedido
-  - **Integración**: Agregar a AccountScreen → "Mis Pedidos"
-
-- [ ] **Sistema de direcciones**
-  - **Entidad**: `AddressEntity` en Room (id, userId, calle, ciudad, etc.)
-  - **DAO**: `AddressDao` para gestionar direcciones de usuario
-  - **UI**: Formulario de dirección, lista de direcciones guardadas
-  - **Integración**: Selección de dirección en checkout (futuro)
-  - **Opcional**: Integrar con API de geocoding para validar direcciones
-
-- [ ] **Métodos de pago**
-  - **Contexto**: Simulación de proceso de pago
-  - **Entidad**: `PaymentMethodEntity` (tipo, último4, expiración)
-  - **UI**: Formulario de tarjeta, lista de métodos guardados
-  - **Integración**: Selección en checkout
-  - **Nota**: NO implementar pago real, solo simulación
-
-- [ ] **Búsqueda avanzada**
-  - **Contexto**: Ya existe búsqueda básica, mejorar con filtros
-  - **Mejoras**:
-    - Filtros por rango de precio (slider)
-    - Filtros por categoría múltiple
-    - Ordenamiento avanzado (ya existe parcialmente)
-    - Búsqueda por ingredientes
-  - **UI**: Dialog o BottomSheet con opciones de filtro
-  - **Archivo**: Mejorar `ProductFilters.kt`
-
-- [ ] **Sistema de reseñas**
-  - **Contexto**: Permitir que usuarios escriban reseñas (actualmente solo se muestran)
-  - **Entidad**: `ReviewEntity` en Room (migrar de JSON)
-  - **DAO**: `ReviewDao` con queries por producto
-  - **UI**: Formulario de reseña en ProductDetailScreen
-  - **Validación**: Usuario debe haber comprado el producto (futuro)
-  - **Integración**: Mostrar reseñas propias del usuario
-
-- [ ] **Compartir productos**
-  - **Implementación**: Usar `ShareCompat` o `Intent.ACTION_SEND`
-  - **Contenido**: Texto con nombre, precio, y link (si hay web)
-  - **UI**: Botón de compartir en ProductDetailScreen
-  - **Opcional**: Generar imagen compartible con información del producto
-
-- [ ] **Modo offline**
-  - **Contexto**: Funcionar sin conexión a internet
-  - **Implementación**:
-    - Cache de productos en Room (ya existe parcialmente)
-    - Sincronización cuando hay conexión
-    - Indicador de estado de conexión
-  - **UI**: Banner o icono mostrando estado offline
-  - **Consideraciones**: Productos y carrito ya funcionan offline
-
-- [ ] **Temas (Dark Mode)**
-  - **Implementación**: Crear `DarkColorScheme` en `Theme.kt`
-  - **UI**: Switch en AccountScreen o Settings
-  - **Persistencia**: Guardar preferencia en DataStore o SharedPreferences
-  - **Material 3**: Ya tiene soporte nativo para dark mode
-
-- [ ] **Internacionalización (i18n)**
-  - **Contexto**: Soporte para múltiples idiomas
-  - **Implementación**:
-    - Mover todos los strings a `res/values/strings.xml`
-    - Crear `res/values-es/strings.xml` para español
-    - Usar `stringResource()` en lugar de strings hardcodeados
-  - **UI**: Selector de idioma en settings
-  - **Archivos**: Todas las pantallas necesitan refactorización
-
-### 🔧 Mejoras Técnicas
-- [ ] **Optimización de imágenes**
-  - **Contexto**: Reducir uso de memoria y mejorar rendimiento
-  - **Implementación**:
-    - Compresión de imágenes antes de guardar (foto de perfil)
-    - Usar `BitmapFactory.Options` con `inSampleSize`
-    - Cache de imágenes con Coil (ya configurado)
-  - **Archivos**: `ImageHelper.kt`, componentes que cargan imágenes
-
-- [ ] **Mejoras de rendimiento**
-  - **Contexto**: Optimizar queries y recomposiciones
-  - **Implementación**:
-    - Agregar índices en Room para queries frecuentes
-    - Usar `remember` y `derivedStateOf` donde sea apropiado
-    - LazyColumn con `key()` para mejor performance
-  - **Archivos**: DAOs, ViewModels, pantallas con listas
-
-- [ ] **Manejo de errores mejorado**
-  - **Contexto**: Centralizar y mejorar mensajes de error
-  - **Implementación**:
-    - Crear `ErrorHandler` o `ExceptionMapper`
-    - Mapear excepciones a mensajes amigables
-    - Mostrar errores consistentemente (Snackbar, Dialog)
-  - **Archivos**: ViewModels, Repositories
-
-- [ ] **Logging y debugging**
-  - **Contexto**: Mejorar debugging y monitoreo
-  - **Implementación**:
-    - Usar `Timber` o `Log` de forma estructurada
-    - Agregar logs en puntos clave (login, errores, navegación)
-    - Configurar niveles de log (DEBUG, RELEASE)
-  - **Archivos**: Todos los ViewModels y Repositories
-
-### 📱 Mejoras de UX
-- [ ] **Pull to refresh**
-  - **Contexto**: Actualizar datos deslizando hacia abajo
-  - **Implementación**: Usar `SwipeRefresh` de Material 3
-  - **Archivos**: `AllProductsScreen.kt`, `HomeScreen.kt`
-  - **Funcionalidad**: Recargar productos desde JSON/BD
-
-- [ ] **Empty states**
-  - **Contexto**: Mostrar mensajes cuando no hay datos
-  - **Implementación**: Crear componentes para estados vacíos
-  - **Casos**: Carrito vacío, sin productos, sin favoritos
-  - **UI**: Ilustración + mensaje + acción sugerida
-
-- [ ] **Onboarding**
-  - **Contexto**: Guía para nuevos usuarios
-  - **Implementación**: Pantalla de bienvenida con pasos
-  - **Persistencia**: Guardar en SharedPreferences si ya se mostró
-  - **UI**: Usar `HorizontalPager` para pasos del tutorial
-
-- [ ] **Mejoras de accesibilidad**
-  - **Contexto**: Hacer la app accesible para todos
-  - **Implementación**:
-    - Agregar `contentDescription` a todos los iconos e imágenes
-    - Verificar contraste de colores (WCAG AA mínimo)
-    - Soporte para TalkBack (screen reader)
-  - **Archivos**: Todos los componentes de UI
-  - **Testing**: Usar Accessibility Scanner de Android
-
----
 
 ## 📊 Resumen de Estado
 
 | Columna | Cantidad | Porcentaje |
 |---------|----------|------------|
-| 🟢 Done | 40+ | ~70% |
+| 🟢 Done | 43+ | ~73% |
 | 🟠 Code Review | 2 | ~3% |
-| 🟡 Doing | 2 | ~3% |
-| 🔵 Backlog (Crítico) | 12 | ~2% |
-| 🟢 Post-Evaluación | 25+ | ~23% |
+| 🟡 Doing | 1 | ~2% |
+| 🔵 Backlog (Crítico) | 12 | ~20% |
+| 🟢 Post-Evaluación | 25+ | ~2% |
 
 ### 📈 Progreso para Evaluación
 
 **Tareas Críticas Restantes:**
-- ✅ Recursos Nativos: 0/12 tareas (0%)
-- ✅ README.md: 0/1 tarea (0%)
-- ✅ Animaciones: 0/3 tareas (0%)
-- ✅ Trello: 0/1 tarea (0%)
+- ❌ Recursos Nativos: 0/12 tareas (0%) - **PENDIENTE**
+- ✅ README.md: 1/1 tarea (100%) - **COMPLETADO**
+- ❌ Animaciones: 0/3 tareas (0%) - **PENDIENTE**
+- ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
 
-**Total crítico pendiente: 17 tareas**
+**Total crítico pendiente: 16 tareas**
 
 ---
 
@@ -894,14 +652,14 @@ Tareas completadas y validadas.
 ### 🔴 CRÍTICO (Hacer primero - Bloqueadores)
 1. **Implementar recursos nativos - Implementación Mínima** ⚠️ REQUISITO OBLIGATORIO
    - Notificaciones (carrito abandonado)
-   - Cámara (foto de perfil)
+   - Galería (foto de perfil - seleccionar de galería)
    - Modificar UserEntity y migración de BD
    - UI para foto de perfil
    - **Sin esto: 0% en IE 2.4.1 (15% de la nota)**
 
-2. **Crear README.md completo** ⚠️ REQUISITO OBLIGATORIO
+2. ~~**Crear README.md completo**~~ ✅ **COMPLETADO**
    - Descripción, nombres, funcionalidades, instrucciones
-   - **Sin esto: No se puede entregar el proyecto**
+   - **Estado**: Implementado y actualizado
 
 ### 🟡 IMPORTANTE (Mejorar nota significativamente)
 3. **Mejorar animaciones** (transiciones, feedback)
@@ -914,11 +672,6 @@ Tareas completadas y validadas.
    - Con Trello visible: Puede llegar a 100% (20% de la nota)
    - Impacto: +8% en nota final
 
-### 🟢 OPCIONAL (Post-evaluación)
-- Tests unitarios
-- Documentación técnica detallada
-- Funcionalidades futuras
-- Mejoras técnicas avanzadas
 
 ---
 
@@ -935,3 +688,51 @@ Tareas completadas y validadas.
 
 **Última actualización**: 10-07-2025  
 **Próxima revisión**: Al completar recursos nativos
+
+---
+
+## 📋 Estado Actual de Implementación (Revisión de Codebase)
+
+### ✅ Tareas Completadas (Verificadas en Codebase)
+
+1. **README.md**: ✅ Completado
+   - Archivo existe en raíz del proyecto
+   - Contiene toda la información requerida
+   - Nombres de estudiantes incluidos
+
+2. **TopNavBar - Hamburger a la derecha**: ✅ Completado
+   - Implementado en `MainContent.kt` línea 271-277
+   - Menú hamburger posicionado a la derecha después del carrito
+
+3. **Sidebar - Ancho 75%**: ✅ Completado
+   - Implementado en `MainContent.kt` línea 113
+   - `ModalDrawerSheet` configurado con `0.75f` del ancho de pantalla
+
+### ❌ Tareas Pendientes (Verificadas en Codebase)
+
+1. **SplashScreen**: ❌ No implementado
+   - No existe archivo `SplashScreen.kt`
+   - No existe ruta `Screen.Splash` en `Screen.kt`
+   - `NavGraph.kt` no tiene ruta de Splash
+   - `startDestination` sigue siendo `Screen.Login.route`
+
+2. **Recursos Nativos - Notificaciones**: ❌ No implementado
+   - No existe `NotificationHelper.kt`
+   - No hay permisos de notificaciones en `AndroidManifest.xml`
+   - `MainActivity.kt` no tiene lógica de `onPause()` para notificaciones
+
+3. **Recursos Nativos - Galería**: ❌ No implementado
+   - No existe `ImageHelper.kt`
+   - No hay permisos de galería en `AndroidManifest.xml`
+   - `UserEntity.kt` no tiene campo `fotoPerfil`
+   - `AccountScreen.kt` no tiene selector de galería
+   - No hay imágenes por defecto (`ic_profile_default`, `ic_product_default`)
+
+4. **Imágenes por defecto en productos**: ❌ No implementado
+   - `ProductCard.kt` no tiene `placeholder`, `error`, ni `fallback` en `AsyncImage`
+   - No existen drawables `ic_product_default` ni `ic_profile_default`
+
+5. **Foto de perfil en AccountScreen**: ❌ No implementado
+   - `AccountScreen.kt` muestra `logo_milsabores` en lugar de foto de perfil
+   - No hay lógica condicional para cargar foto desde storage
+   - No hay botón para seleccionar foto de galería

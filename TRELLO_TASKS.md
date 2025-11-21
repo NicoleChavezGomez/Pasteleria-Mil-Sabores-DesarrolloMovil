@@ -211,7 +211,7 @@ Tareas completadas y validadas.
 
 ### 🚧 En Progreso - Tareas Críticas para Evaluación
 
-- [ ] **Crear README.md completo** ⚠️ OBLIGATORIO
+- [x] **Crear README.md completo** ⚠️ OBLIGATORIO
   - **Ubicación**: Archivo en raíz del proyecto `README.md`
   - **Contenido requerido**:
     - Descripción del proyecto (app de pastelería e-commerce)

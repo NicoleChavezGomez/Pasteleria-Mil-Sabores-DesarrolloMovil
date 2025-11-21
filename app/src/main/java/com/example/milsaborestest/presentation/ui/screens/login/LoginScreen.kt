@@ -1,0 +1,176 @@
+package com.example.milsaborestest.presentation.ui.screens.login
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
+import com.example.milsaborestest.ui.theme.CardWhite
+import com.example.milsaborestest.ui.theme.TextDark
+import com.example.milsaborestest.util.Constants.Design
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    
+    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val message by viewModel.message.collectAsState()
+    
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            onLoginSuccess()
+        }
+    }
+    
+    LaunchedEffect(message) {
+        message?.let {
+            if (!isAuthenticated) {
+                emailError = it
+            } else {
+                emailError = ""
+            }
+            viewModel.clearMessage()
+        }
+    }
+    
+    Column(modifier = Modifier.fillMaxSize()) {
+        // TopBar
+        Surface(
+            color = CardWhite,
+            shadowElevation = Design.CARD_ELEVATION
+        ) {
+            TopAppBar(
+                title = { Text("Iniciar Sesión") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = CardWhite,
+                    titleContentColor = TextDark
+                )
+            )
+        }
+        
+        // Contenido
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Design.PADDING_STANDARD),
+                elevation = CardDefaults.cardElevation(defaultElevation = Design.LOGIN_CARD_ELEVATION),
+                colors = CardDefaults.cardColors(containerColor = CardWhite)
+            ) {
+                Column(
+                    modifier = Modifier.padding(Design.PADDING_EXTRA_LARGE),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Design.PADDING_STANDARD)
+                ) {
+                    Text(
+                        text = "Mil Sabores",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Text(
+                        text = "Inicia sesión para continuar",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            emailError = ""
+                        },
+                        label = { Text("Email") },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email") },
+                        isError = emailError.isNotEmpty(),
+                        supportingText = if (emailError.isNotEmpty()) {
+                            { Text(emailError) }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            passwordError = ""
+                        },
+                        label = { Text("Contraseña") },
+                        leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Contraseña") },
+                        trailingIcon = {
+                            IconButton(onClick = { showPassword = !showPassword }) {
+                                Icon(
+                                    if (showPassword) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                    contentDescription = if (showPassword) "Ocultar" else "Mostrar"
+                                )
+                            }
+                        },
+                        visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = passwordError.isNotEmpty(),
+                        supportingText = if (passwordError.isNotEmpty()) {
+                            { Text(passwordError) }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    
+                    Button(
+                        onClick = {
+                            if (email.isBlank() || password.isBlank()) {
+                                emailError = if (email.isBlank()) "Campo requerido" else ""
+                                passwordError = if (password.isBlank()) "Campo requerido" else ""
+                                return@Button
+                            }
+                            
+                            viewModel.login(email, password)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text("Iniciar Sesión")
+                    }
+                    
+                    TextButton(onClick = onNavigateToRegister) {
+                        Text("¿No tienes cuenta? Regístrate")
+                    }
+                }
+            }
+        }
+    }
+}
+

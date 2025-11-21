@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
 import com.example.milsaborestest.presentation.ui.components.ProductCard
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
@@ -31,7 +31,7 @@ fun ProductListScreen(
     onProductClick: (String) -> Unit,
     onBackClick: () -> Unit,
     onNavigateToCart: () -> Unit,
-    productViewModel: ProductViewModel = hiltViewModel(),
+    productViewModel: ProductViewModel = viewModel(),
     cartViewModel: CartViewModel
 ) {
     // Cargar productos cuando se cambia la categoría

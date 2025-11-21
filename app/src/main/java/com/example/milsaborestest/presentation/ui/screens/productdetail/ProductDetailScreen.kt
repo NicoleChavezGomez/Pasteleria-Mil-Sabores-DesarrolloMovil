@@ -19,7 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.milsaborestest.presentation.ui.components.ProductDetailSkeleton
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
@@ -37,7 +37,7 @@ fun ProductDetailScreen(
     productId: String,
     onBackClick: () -> Unit,
     onNavigateToCart: () -> Unit,
-    productViewModel: ProductViewModel = hiltViewModel(),
+    productViewModel: ProductViewModel = viewModel(),
     cartViewModel: CartViewModel
 ) {
     // Cargar producto cuando cambia el ID

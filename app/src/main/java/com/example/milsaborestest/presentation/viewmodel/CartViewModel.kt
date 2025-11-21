@@ -1,21 +1,24 @@
 package com.example.milsaborestest.presentation.viewmodel
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.milsaborestest.data.local.database.AppDatabase
+import com.example.milsaborestest.data.repository.CartRepositoryImpl
+import com.example.milsaborestest.data.repository.ProductRepositoryImpl
+import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import com.example.milsaborestest.domain.model.CartItem
 import com.example.milsaborestest.domain.repository.CartRepository
 import com.example.milsaborestest.domain.repository.ProductRepository
 import com.example.milsaborestest.util.Constants
 import com.example.milsaborestest.util.UiState
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class SnackbarMessage(
     val message: String,
@@ -23,11 +26,14 @@ data class SnackbarMessage(
     val onAction: (suspend () -> Unit)? = null
 )
 
-@HiltViewModel
-class CartViewModel @Inject constructor(
-    private val cartRepository: CartRepository,
-    private val productRepository: ProductRepository
-) : ViewModel() {
+class CartViewModel(application: Application) : AndroidViewModel(application) {
+    
+    private val database = AppDatabase.getDatabase(application)
+    private val cartDao = database.cartDao()
+    private val cartRepository: CartRepository = CartRepositoryImpl(cartDao)
+    
+    private val productDataSource = ProductJsonDataSource(application)
+    private val productRepository: ProductRepository = ProductRepositoryImpl(productDataSource)
     
     val cartItems: StateFlow<List<CartItem>> = cartRepository.getAllCartItems()
         .stateIn(

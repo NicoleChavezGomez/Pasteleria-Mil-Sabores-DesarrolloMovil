@@ -1,7 +1,10 @@
 package com.example.milsaborestest.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.milsaborestest.data.repository.ProductRepositoryImpl
+import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import com.example.milsaborestest.domain.model.Product
 import com.example.milsaborestest.domain.usecase.GetAllProductsUseCase
 import com.example.milsaborestest.domain.usecase.GetCategoriesUseCase
@@ -9,7 +12,6 @@ import com.example.milsaborestest.domain.usecase.GetFeaturedProductsUseCase
 import com.example.milsaborestest.domain.usecase.GetProductsByCategoryUseCase
 import com.example.milsaborestest.domain.usecase.GetProductByIdUseCase
 import com.example.milsaborestest.util.UiState
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,16 +19,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class ProductViewModel @Inject constructor(
-    private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val getProductsByCategoryUseCase: GetProductsByCategoryUseCase,
-    private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val getFeaturedProductsUseCase: GetFeaturedProductsUseCase,
-    private val getAllProductsUseCase: GetAllProductsUseCase
-) : ViewModel() {
+class ProductViewModel(application: Application) : AndroidViewModel(application) {
+    
+    private val productDataSource = ProductJsonDataSource(application)
+    private val productRepository = ProductRepositoryImpl(productDataSource)
+    private val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
+    private val getProductsByCategoryUseCase = GetProductsByCategoryUseCase(productRepository)
+    private val getProductByIdUseCase = GetProductByIdUseCase(productRepository)
+    private val getFeaturedProductsUseCase = GetFeaturedProductsUseCase(productRepository)
+    private val getAllProductsUseCase = GetAllProductsUseCase(productRepository)
     
     private val _categoriesState = MutableStateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>> = _categoriesState.asStateFlow()

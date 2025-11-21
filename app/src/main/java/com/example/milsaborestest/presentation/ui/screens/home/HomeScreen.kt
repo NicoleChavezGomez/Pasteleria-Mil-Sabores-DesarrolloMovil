@@ -26,7 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.milsaborestest.domain.model.Category
 import com.example.milsaborestest.presentation.ui.components.AppFooter
 import com.example.milsaborestest.presentation.ui.components.CategoryCard
@@ -51,7 +51,7 @@ fun HomeScreen(
     onNavigateToCart: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToAllProducts: () -> Unit,
-    productViewModel: ProductViewModel = hiltViewModel(),
+    productViewModel: ProductViewModel = viewModel(),
     cartViewModel: CartViewModel
 ) {
     val categoriesState by productViewModel.categoriesState.collectAsState()

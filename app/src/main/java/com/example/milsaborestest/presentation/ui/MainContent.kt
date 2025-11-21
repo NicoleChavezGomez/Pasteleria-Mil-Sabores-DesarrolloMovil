@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -47,7 +46,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(navController: NavHostController) {
-    val cartViewModel: CartViewModel = hiltViewModel()
+    val cartViewModel: CartViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
     val totalItems by cartViewModel.totalItems.collectAsState()
     val totalPrice by cartViewModel.totalPrice.collectAsState()

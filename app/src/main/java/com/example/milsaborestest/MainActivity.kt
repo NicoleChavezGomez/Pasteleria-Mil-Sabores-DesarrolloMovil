@@ -8,9 +8,6 @@ import androidx.activity.SystemBarStyle
 import androidx.navigation.compose.rememberNavController
 import com.example.milsaborestest.presentation.ui.MainContent
 import com.example.milsaborestest.ui.theme.MilSaboresTestTheme
-import dagger.hilt.android.AndroidEntryPoint
-
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -12,7 +12,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.milsaborestest.presentation.ui.components.CategoryCard
 import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
 import com.example.milsaborestest.presentation.viewmodel.ProductViewModel
@@ -22,7 +22,7 @@ import com.example.milsaborestest.util.UiState
 @Composable
 fun CategoriesScreen(
     onCategoryClick: (String) -> Unit,
-    productViewModel: ProductViewModel = hiltViewModel()
+    productViewModel: ProductViewModel = viewModel()
 ) {
     val categoriesState by productViewModel.categoriesState.collectAsState()
     val currentState = categoriesState

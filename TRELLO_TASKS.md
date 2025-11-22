@@ -58,9 +58,10 @@ Tareas completadas y validadas.
 
 ### ✅ Navegación y UI Base
 - [x] **Sistema de navegación con Compose Navigation**
-  - AppNavigation configurado
+  - AppNavigation configurado (renombrado desde NavGraph.kt)
   - Rutas definidas (Home, Products, Cart, Account, Login, Register)
   - Navegación entre pantallas funcional
+  - AppNavigation recibe authViewModel compartido y lo pasa a pantallas que lo necesitan
 
 - [x] **Implementar Material 3 Design**
   - Tema personalizado
@@ -130,6 +131,8 @@ Tareas completadas y validadas.
   - Logout funcional
   - Cambio dinámico de botones (Login/Logout)
   - Navegación condicional
+  - AuthViewModel compartido entre MainContent, AppNavigation y pantallas (LoginScreen, RegisterScreen, AccountScreen)
+  - Estado de autenticación consistente en sidebar y pantallas individuales
 
 ### ✅ Validaciones y Lógica de Negocio
 - [x] **Validaciones centralizadas en ViewModels**
@@ -686,7 +689,7 @@ Tareas completadas y validadas.
 
 ---
 
-**Última actualización**: 10-07-2025  
+**Última actualización**: 11-01-2025  
 **Próxima revisión**: Al completar recursos nativos
 
 ---
@@ -707,6 +710,12 @@ Tareas completadas y validadas.
 3. **Sidebar - Ancho 75%**: ✅ Completado
    - Implementado en `MainContent.kt` línea 113
    - `ModalDrawerSheet` configurado con `0.75f` del ancho de pantalla
+
+4. **Gestión de sesión - AuthViewModel compartido**: ✅ Completado
+   - AuthViewModel compartido desde MainContent a AppNavigation
+   - AuthViewModel pasado a LoginScreen, RegisterScreen y AccountScreen
+   - Estado de autenticación consistente entre sidebar y pantallas
+   - Implementado en `MainContent.kt`, `AppNavigation.kt` y pantallas de autenticación
 
 ### ❌ Tareas Pendientes (Verificadas en Codebase)
 

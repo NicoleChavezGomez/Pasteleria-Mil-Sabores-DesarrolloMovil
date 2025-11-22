@@ -8,6 +8,7 @@ data class User(
     val email: String,
     val name: String,
     val loginDate: String? = null,
-    val isAuthenticated: Boolean = true
+    val isAuthenticated: Boolean = true,
+    val fotoPerfil: String? = null  // Ruta del archivo de imagen de perfil
 )
 

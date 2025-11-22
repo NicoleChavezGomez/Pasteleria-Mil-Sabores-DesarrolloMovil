@@ -9,6 +9,7 @@ data class UserEntity(
     val id: Int = 0,
     val nombre: String,
     val email: String,
-    val contrasena: String
+    val contrasena: String,
+    val fotoPerfil: String? = null  // Ruta del archivo de imagen de perfil
 )
 

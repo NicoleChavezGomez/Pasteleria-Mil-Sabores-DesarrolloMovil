@@ -57,7 +57,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                         email = usuarioEncontrado.email,
                         name = usuarioEncontrado.nombre,
                         loginDate = System.currentTimeMillis().toString(),
-                        isAuthenticated = true
+                        isAuthenticated = true,
+                        fotoPerfil = usuarioEncontrado.fotoPerfil
                     )
                     
                     _user.value = loggedUser
@@ -136,7 +137,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                         email = usuarioInsertado.email,
                         name = usuarioInsertado.nombre,
                         loginDate = System.currentTimeMillis().toString(),
-                        isAuthenticated = true
+                        isAuthenticated = true,
+                        fotoPerfil = usuarioInsertado.fotoPerfil
                     )
                     
                     _user.value = loggedUser

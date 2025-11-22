@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
         CartEntity::class,
         UserEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -26,6 +26,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
         
+        // Migración de versión 2 a 3: Agregar campo fotoPerfil a la tabla usuario
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE usuario ADD COLUMN fotoPerfil TEXT")
+            }
+        }
+        
         fun getDatabase(context: Context): AppDatabase {
             if (INSTANCE == null) {
                 synchronized(this) {
@@ -35,6 +42,7 @@ abstract class AppDatabase : RoomDatabase() {
                             AppDatabase::class.java,
                             "milsabores_database"
                         )
+                        .addMigrations(MIGRATION_2_3)
                         .fallbackToDestructiveMigration() // Para desarrollo, permite recrear DB en cambios de versión
                         .build()
                         

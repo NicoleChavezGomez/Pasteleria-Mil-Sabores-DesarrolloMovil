@@ -20,7 +20,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.ui.components.ProductDetailSkeleton
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 import com.example.milsaborestest.presentation.viewmodel.ProductViewModel
@@ -34,12 +36,11 @@ import com.example.milsaborestest.util.formatRating
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
-    productId: String,
-    onBackClick: () -> Unit,
-    onNavigateToCart: () -> Unit,
-    productViewModel: ProductViewModel = viewModel(),
-    cartViewModel: CartViewModel
+    navController: NavHostController,
+    productId: String
 ) {
+    val productViewModel: ProductViewModel = viewModel()
+    val cartViewModel: CartViewModel = viewModel()
     // Cargar producto cuando cambia el ID
     LaunchedEffect(productId) {
         productViewModel.loadProductById(productId)
@@ -60,7 +61,7 @@ fun ProductDetailScreen(
             TopAppBar(
                 title = { Text("Detalle del Producto") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
@@ -231,7 +232,7 @@ fun ProductDetailScreen(
         
         // FAB overlay
             FloatingActionButton(
-                onClick = onNavigateToCart,
+                onClick = { navController.navigate(Screen.Cart.route) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(Design.PADDING_STANDARD),

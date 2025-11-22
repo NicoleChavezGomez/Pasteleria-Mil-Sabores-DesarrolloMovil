@@ -20,6 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
@@ -28,9 +31,8 @@ import com.example.milsaborestest.util.Constants.Design
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit,
-    viewModel: AuthViewModel
+    navController: NavHostController,
+    authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -38,12 +40,14 @@ fun LoginScreen(
     var emailError by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf("") }
     
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
-    val message by viewModel.message.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val message by authViewModel.message.collectAsState()
     
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
-            onLoginSuccess()
+            navController.navigate(Screen.Home.route) {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
     
@@ -54,7 +58,7 @@ fun LoginScreen(
             } else {
                 emailError = ""
             }
-            viewModel.clearMessage()
+            authViewModel.clearMessage()
         }
     }
     
@@ -154,7 +158,7 @@ fun LoginScreen(
                                 return@Button
                             }
                             
-                            viewModel.login(email, password)
+                            authViewModel.login(email, password)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -164,7 +168,7 @@ fun LoginScreen(
                         Text("Iniciar Sesión")
                     }
                     
-                    TextButton(onClick = onNavigateToRegister) {
+                    TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
                         Text("¿No tienes cuenta? Regístrate")
                     }
                 }

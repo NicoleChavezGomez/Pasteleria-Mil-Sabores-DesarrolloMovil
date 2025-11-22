@@ -29,7 +29,7 @@ import android.util.Log
 import com.example.milsaborestest.presentation.viewmodel.SnackbarMessage
 import com.example.milsaborestest.R
 import com.example.milsaborestest.domain.model.User
-import com.example.milsaborestest.presentation.navigation.MilSaboresNavGraph
+import com.example.milsaborestest.presentation.navigation.AppNavigation
 import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.ui.components.BottomNavBar
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
@@ -175,12 +175,12 @@ fun MainContent(navController: NavHostController) {
                     SnackbarHost(hostState = snackbarHostState)
                 }
             ) { paddingValues ->
-                MilSaboresNavGraph(
-                    navController = navController,
-                    cartViewModel = cartViewModel,
-                    authViewModel = authViewModel,
-                    modifier = Modifier.padding(paddingValues)
-                )
+                Box(modifier = Modifier.padding(paddingValues)) {
+                    AppNavigation(
+                        navController = navController,
+                        authViewModel = authViewModel
+                    )
+                }
             }
         }
     }

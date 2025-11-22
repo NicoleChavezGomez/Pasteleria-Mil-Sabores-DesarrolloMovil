@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.ui.components.ProductCard
 import com.example.milsaborestest.presentation.ui.components.ProductFilters
 import com.example.milsaborestest.presentation.ui.components.SortOption
@@ -36,13 +38,11 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AllProductsScreen(
-    onProductClick: (String) -> Unit,
-    onBackClick: () -> Unit,
-    onNavigateToCart: () -> Unit,
-    initialCategoryId: String? = null,
-    productViewModel: ProductViewModel = viewModel(),
-    cartViewModel: CartViewModel
+    navController: NavHostController,
+    initialCategoryId: String? = null
 ) {
+    val productViewModel: ProductViewModel = viewModel()
+    val cartViewModel: CartViewModel = viewModel()
     val filteredProducts by productViewModel.filteredProducts.collectAsState()
     val categoriesState by productViewModel.categoriesState.collectAsState()
     val searchTerm by productViewModel.searchTerm.collectAsState()
@@ -80,7 +80,7 @@ fun AllProductsScreen(
             TopAppBar(
                 title = { Text("Todos los Productos") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
@@ -204,7 +204,9 @@ fun AllProductsScreen(
                                 rowProducts.forEach { product ->
                                     ProductCard(
                                         product = product,
-                                        onProductClick = onProductClick,
+                                        onProductClick = { productId ->
+                                            navController.navigate(Screen.ProductDetail.createRoute(productId))
+                                        },
                                         onAddToCart = addToCart,
                                         modifier = Modifier.weight(1f)
                                     )
@@ -221,7 +223,7 @@ fun AllProductsScreen(
             
             // FAB overlay
             FloatingActionButton(
-                onClick = onNavigateToCart,
+                onClick = { navController.navigate(Screen.Cart.route) },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(Design.PADDING_STANDARD),

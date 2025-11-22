@@ -58,7 +58,7 @@ Tareas completadas y validadas.
 
 ### ✅ Navegación y UI Base
 - [x] **Sistema de navegación con Compose Navigation**
-  - NavGraph configurado
+  - AppNavigation configurado
   - Rutas definidas (Home, Products, Cart, Account, Login, Register)
   - Navegación entre pantallas funcional
 
@@ -606,12 +606,12 @@ Tareas completadas y validadas.
     - Tamaño del logo: Aproximadamente 200-250dp de ancho (ajustar según necesidad)
     - Opcional: Agregar texto "Mil Sabores" o "Pastelería" debajo del logo
   - **Navegación**:
-    - Modificar `NavGraph.kt` para que `startDestination` sea `Screen.Splash.route`
+    - Modificar `AppNavigation.kt` para que `startDestination` sea `Screen.Splash.route`
     - Agregar ruta `Splash` en el enum `Screen` (si no existe)
     - En `SplashScreen`, después del delay, navegar a `Screen.Login.route` o `Screen.Home.route`
     - Usar `navController.navigate()` con `popUpTo(Screen.Splash.route) { inclusive = true }` para remover splash del back stack
   - **Archivos a modificar**:
-    - `app/src/main/java/com/example/milsaborestest/presentation/navigation/NavGraph.kt` (agregar ruta Splash)
+    - `app/src/main/java/com/example/milsaborestest/presentation/navigation/AppNavigation.kt` (agregar ruta Splash)
     - `app/src/main/java/com/example/milsaborestest/presentation/navigation/Screen.kt` (agregar objeto Splash si no existe)
     - `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt` (cambiar startDestination si es necesario)
   - **Consideraciones**:
@@ -713,7 +713,7 @@ Tareas completadas y validadas.
 1. **SplashScreen**: ❌ No implementado
    - No existe archivo `SplashScreen.kt`
    - No existe ruta `Screen.Splash` en `Screen.kt`
-   - `NavGraph.kt` no tiene ruta de Splash
+   - `AppNavigation.kt` no tiene ruta de Splash
    - `startDestination` sigue siendo `Screen.Login.route`
 
 2. **Recursos Nativos - Notificaciones**: ❌ No implementado

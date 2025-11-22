@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
@@ -29,10 +30,8 @@ import com.example.milsaborestest.util.formatPrice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen(
-    onBackClick: () -> Unit,
-    viewModel: CartViewModel
-) {
+fun CartScreen(navController: NavHostController) {
+    val viewModel: CartViewModel = viewModel()
     val cartItems by viewModel.cartItems.collectAsState()
     val totalItems by viewModel.totalItems.collectAsState()
     val totalPrice by viewModel.totalPrice.collectAsState()
@@ -46,7 +45,7 @@ fun CartScreen(
             TopAppBar(
                 title = { Text("Carrito") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },

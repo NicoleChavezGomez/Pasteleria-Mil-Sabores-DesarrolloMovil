@@ -27,7 +27,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.milsaborestest.domain.model.Category
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.ui.components.AppFooter
 import com.example.milsaborestest.presentation.ui.components.CategoryCard
 import com.example.milsaborestest.presentation.ui.components.CategoryRowSkeleton
@@ -45,15 +47,9 @@ import com.example.milsaborestest.util.UiState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen(
-    onCategoryClick: (String) -> Unit,
-    onProductClick: (String) -> Unit,
-    onNavigateToCart: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    onNavigateToAllProducts: () -> Unit,
-    productViewModel: ProductViewModel = viewModel(),
-    cartViewModel: CartViewModel
-) {
+fun HomeScreen(navController: NavHostController) {
+    val productViewModel: ProductViewModel = viewModel()
+    val cartViewModel: CartViewModel = viewModel()
     val categoriesState by productViewModel.categoriesState.collectAsState()
     val featuredProductsState by productViewModel.featuredProductsState.collectAsState()
     val totalItems by cartViewModel.totalItems.collectAsState()
@@ -86,7 +82,9 @@ fun HomeScreen(
                 }
                 ProductCarousel(
                     items = carouselItems,
-                    onItemClick = onProductClick
+                    onItemClick = { productId ->
+                        navController.navigate(Screen.ProductDetail.createRoute(productId))
+                    }
                 )
             }
         }
@@ -100,7 +98,9 @@ fun HomeScreen(
                 content = {
                     CategoriesSection(
                         categoriesState = categoriesState,
-                        onCategoryClick = onCategoryClick
+                        onCategoryClick = { categoryId ->
+                            navController.navigate(Screen.Products.createRoute(categoryId))
+                        }
                     )
                 }
             )
@@ -120,7 +120,7 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = onNavigateToAllProducts) {
+                TextButton(onClick = { navController.navigate(Screen.Products.createRoute()) }) {
                     Text("Ver todos")
                 }
             }
@@ -147,7 +147,9 @@ fun HomeScreen(
                             items(currentState.data) { product ->
                                 ProductCard(
                                     product = product,
-                                    onProductClick = onProductClick,
+                                    onProductClick = { productId ->
+                                        navController.navigate(Screen.ProductDetail.createRoute(productId))
+                                    },
                                     onAddToCart = addToCart,
                                     modifier = Modifier.width(200.dp)
                                 )

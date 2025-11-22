@@ -21,6 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
@@ -29,9 +32,8 @@ import com.example.milsaborestest.util.Constants.Design
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
-    onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    viewModel: AuthViewModel
+    navController: NavHostController,
+    authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -40,12 +42,14 @@ fun RegisterScreen(
     var showPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
     
-    val isAuthenticated by viewModel.isAuthenticated.collectAsState()
-    val message by viewModel.message.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val message by authViewModel.message.collectAsState()
     
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
-            onRegisterSuccess()
+            navController.navigate(Screen.Home.route) {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
     
@@ -165,7 +169,7 @@ fun RegisterScreen(
                     Button(
                         onClick = {
                             if (password == confirmPassword && password.length >= 6 && email.isNotBlank() && name.isNotBlank()) {
-                                viewModel.register(nombre = name, email = email, password = password)
+                                authViewModel.register(nombre = name, email = email, password = password)
                             }
                         },
                         modifier = Modifier
@@ -176,7 +180,7 @@ fun RegisterScreen(
                         Text("Registrarse", style = MaterialTheme.typography.titleMedium)
                     }
                     
-                    TextButton(onClick = onNavigateToLogin) {
+                    TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
                         Text("¿Ya tienes cuenta? Inicia sesión aquí")
                     }
                 }

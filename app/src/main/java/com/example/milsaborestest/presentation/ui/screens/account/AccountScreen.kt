@@ -18,7 +18,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.milsaborestest.R
+import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
@@ -27,7 +29,7 @@ import com.example.milsaborestest.util.Constants.Design
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
-    onNavigateToLogin: () -> Unit,
+    navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
@@ -103,7 +105,7 @@ fun AccountScreen(
                     )
                     
                     Button(
-                        onClick = onNavigateToLogin,
+                        onClick = { navController.navigate(Screen.Login.route) },
                         modifier = Modifier.padding(top = Design.PADDING_SMALL)
                     ) {
                         Text("Entrar")
@@ -146,7 +148,9 @@ fun AccountScreen(
                     title = "Cerrar Sesión",
                     onClick = { 
                         authViewModel.logout()
-                        onNavigateToLogin()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 )
             }

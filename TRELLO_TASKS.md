@@ -56,6 +56,21 @@ Tareas completadas y validadas.
   - CartViewModel con operaciones CRUD
   - Sincronización con base de datos
 
+- [x] **Persistencia de foto de perfil de usuario**
+  - Campo `fotoPerfil` agregado a UserEntity (nullable String)
+  - Campo `fotoPerfil` agregado al modelo de dominio User
+  - Migración MIGRATION_2_3 implementada (versión 2 → 3)
+  - Conversiones en AuthViewModel actualizadas para incluir fotoPerfil
+  - Base de datos lista para almacenar rutas de imágenes de perfil
+
+- [x] **Sistema de persistencia general**
+  - Room Database configurado como solución de persistencia local
+  - Datos persistentes: Usuarios (UserEntity), Carrito (CartEntity)
+  - Migraciones de base de datos implementadas y configuradas
+  - Datos no persistentes: Productos (cargados desde JSON en assets)
+  - Estado de autenticación: Persistido en base de datos, se mantiene entre sesiones
+  - Carrito de compras: Persistido en base de datos, se mantiene entre sesiones
+
 ### ✅ Navegación y UI Base
 - [x] **Sistema de navegación con Compose Navigation**
   - AppNavigation configurado (renombrado desde NavGraph.kt)
@@ -336,43 +351,22 @@ Tareas completadas y validadas.
     - **Ventaja**: Más simple que cámara, no requiere FileProvider
   - **Verificar**: Permisos antes de `<application>`
 
-- [ ] **Modificar UserEntity para foto de perfil**
+- [x] **Modificar UserEntity para foto de perfil** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/data/local/database/UserEntity.kt`
-  - **Modificación**: Agregar campo nullable:
-    ```kotlin
-    @Entity(tableName = "usuario")
-    data class UserEntity(
-        @PrimaryKey(autoGenerate = true)
-        val id: Int = 0,
-        val nombre: String,
-        val email: String,
-        val contrasena: String,
-        val fotoPerfil: String? = null  // Ruta del archivo de imagen
-    )
-    ```
+  - **Implementado**: Campo `fotoPerfil: String? = null` agregado a UserEntity
   - **Consideraciones**:
     - Campo nullable porque usuarios existentes no tendrán foto
     - Almacenar ruta relativa o nombre de archivo, no URI completo
     - Formato sugerido: "profile_${userId}.jpg" o similar
   - **UserDao**: No requiere cambios, Room maneja automáticamente
 
-- [ ] **Crear migración de base de datos**
+- [x] **Crear migración de base de datos** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
-  - **Pasos**:
-    1. Incrementar `version` de 2 a 3 en `@Database`
-    2. Crear objeto `Migration`:
-       ```kotlin
-       val MIGRATION_2_3 = object : Migration(2, 3) {
-           override fun migrate(database: SupportSQLiteDatabase) {
-               database.execSQL("ALTER TABLE usuario ADD COLUMN fotoPerfil TEXT")
-           }
-       }
-       ```
-    3. Agregar migración al builder:
-       ```kotlin
-       .addMigrations(MIGRATION_2_3)
-       ```
-    4. No Remover `fallbackToDestructiveMigration()` porque es solo para mostralo una vez para presentarlo. 
+  - **Implementado**:
+    1. Versión incrementada de 2 a 3 en `@Database`
+    2. Migración `MIGRATION_2_3` creada y agregada al builder
+    3. `fallbackToDestructiveMigration()` mantenido para desarrollo
+  - **Migración**: `ALTER TABLE usuario ADD COLUMN fotoPerfil TEXT` 
 
 - [ ] **Crear imágenes por defecto en drawable**
   - **Ubicación**: `app/src/main/res/drawable/`
@@ -717,6 +711,13 @@ Tareas completadas y validadas.
    - Estado de autenticación consistente entre sidebar y pantallas
    - Implementado en `MainContent.kt`, `AppNavigation.kt` y pantallas de autenticación
 
+5. **Modelo de datos - Foto de perfil**: ✅ Completado
+   - Campo `fotoPerfil` agregado a `UserEntity.kt`
+   - Campo `fotoPerfil` agregado al modelo de dominio `User.kt`
+   - Migración `MIGRATION_2_3` implementada en `AppDatabase.kt`
+   - Versión de BD actualizada de 2 a 3
+   - Conversiones en `AuthViewModel.kt` actualizadas
+
 ### ❌ Tareas Pendientes (Verificadas en Codebase)
 
 1. **SplashScreen**: ❌ No implementado
@@ -730,12 +731,13 @@ Tareas completadas y validadas.
    - No hay permisos de notificaciones en `AndroidManifest.xml`
    - `MainActivity.kt` no tiene lógica de `onPause()` para notificaciones
 
-3. **Recursos Nativos - Galería**: ❌ No implementado
-   - No existe `ImageHelper.kt`
-   - No hay permisos de galería en `AndroidManifest.xml`
-   - `UserEntity.kt` no tiene campo `fotoPerfil`
-   - `AccountScreen.kt` no tiene selector de galería
-   - No hay imágenes por defecto (`ic_profile_default`, `ic_product_default`)
+3. **Recursos Nativos - Galería**: ⚠️ Parcialmente implementado
+   - ✅ `UserEntity.kt` tiene campo `fotoPerfil` (completado)
+   - ✅ Migración de BD implementada (completado)
+   - ❌ No existe `ImageHelper.kt`
+   - ❌ No hay permisos de galería en `AndroidManifest.xml`
+   - ❌ `AccountScreen.kt` no tiene selector de galería
+   - ❌ No hay imágenes por defecto (`ic_profile_default`, `ic_product_default`)
 
 4. **Imágenes por defecto en productos**: ❌ No implementado
    - `ProductCard.kt` no tiene `placeholder`, `error`, ni `fallback` en `AsyncImage`

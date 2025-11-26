@@ -45,7 +45,11 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent(navController: NavHostController) {
+fun MainContent(
+    navController: NavHostController,
+    shouldNavigateToCart: Boolean = false,
+    onNavigationHandled: () -> Unit = {}
+) {
     val cartViewModel: CartViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
     val totalItems by cartViewModel.totalItems.collectAsState()
@@ -58,6 +62,21 @@ fun MainContent(navController: NavHostController) {
     // Sin protección de rutas - como PokeStore, puedes navegar sin autenticación
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    
+    // Manejar navegación desde notificación
+    LaunchedEffect(shouldNavigateToCart) {
+        if (shouldNavigateToCart) {
+            Log.d(Constants.TAG, "Navegando al carrito desde notificación")
+            navController.navigate(Screen.Cart.route) {
+                // Limpiar el back stack hasta la pantalla actual antes de navegar
+                popUpTo(navController.graph.startDestinationId) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+            onNavigationHandled()
+        }
+    }
     // DEBUG: Log para ver si cartViewModel está cambiando
     val snackbarMessageRaw = cartViewModel.snackbarMessage
     val snackbarMessage by snackbarMessageRaw.collectAsState()

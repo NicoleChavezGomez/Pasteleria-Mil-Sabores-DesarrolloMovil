@@ -138,6 +138,8 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 cartRepository.clearCart()
                 _snackbarMessage.value = SnackbarMessage("Carrito vaciado")
+                // Cancelar notificación si existe
+                com.example.milsaborestest.util.NotificationHelper.cancelCartReminderNotification(getApplication())
             } catch (e: Exception) {
                 _snackbarMessage.value = SnackbarMessage("Error al vaciar carrito: ${e.message}")
             }

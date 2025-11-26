@@ -52,18 +52,18 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 
                 if (usuarioEncontrado != null) {
                     // Convertir UserEntity a User del dominio
-                    val loggedUser = User(
+                val loggedUser = User(
                         id = usuarioEncontrado.id.toString(),
                         email = usuarioEncontrado.email,
                         name = usuarioEncontrado.nombre,
-                        loginDate = System.currentTimeMillis().toString(),
+                    loginDate = System.currentTimeMillis().toString(),
                         isAuthenticated = true,
                         fotoPerfil = usuarioEncontrado.fotoPerfil
-                    )
-                    
+                )
+                
                     _user.value = loggedUser
                     _isAuthenticated.value = true
-                    _message.value = "Login exitoso"
+                _message.value = "Login exitoso"
                 } else {
                     _message.value = "Email o contraseña incorrectos"
                     _isAuthenticated.value = false

@@ -199,9 +199,9 @@ fun MainContent(
             ) { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
                     AppNavigation(
-                        navController = navController,
+                    navController = navController,
                         authViewModel = authViewModel
-                    )
+                )
                 }
             }
         }
@@ -479,19 +479,19 @@ fun NavigationDrawerContent(
                                     .clip(CircleShape)
                             )
                             
-                            Column(
+                        Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
-                            ) {
-                                Text(
-                                    text = user.name,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = user.email,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                            verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                        ) {
+                            Text(
+                                text = user.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = user.email,
+                                style = MaterialTheme.typography.bodySmall
+                            )
                             }
                         }
                     }

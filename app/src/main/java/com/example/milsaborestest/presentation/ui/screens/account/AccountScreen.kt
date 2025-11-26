@@ -120,10 +120,10 @@ fun AccountScreen(
                     ) {
                         ProfileImage(
                             user = user!!,
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape)
-                        )
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                    )
                         
                         // Botón flotante para editar foto
                         FloatingActionButton(

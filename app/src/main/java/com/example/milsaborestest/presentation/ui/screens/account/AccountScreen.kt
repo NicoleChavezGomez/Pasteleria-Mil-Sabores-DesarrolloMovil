@@ -1,13 +1,11 @@
 package com.example.milsaborestest.presentation.ui.screens.account
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -16,10 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.R
@@ -124,7 +119,7 @@ fun AccountScreen(
                         FloatingActionButton(
                             onClick = {
                                 pickMedia.launch(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
                             },
                             modifier = Modifier
@@ -180,7 +175,7 @@ fun AccountScreen(
                 }
             }
             
-            Divider()
+            HorizontalDivider()
             
             // Opciones de menú
             if (isAuthenticated && user != null) {
@@ -208,10 +203,10 @@ fun AccountScreen(
                     onClick = { /* TODO: Implementar pagos */ }
                 )
                 
-                Divider()
+                HorizontalDivider()
                 
                 MenuOptionItem(
-                    icon = Icons.Filled.ExitToApp,
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
                     title = "Cerrar Sesión",
                     onClick = { 
                         authViewModel.logout()

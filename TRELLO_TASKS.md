@@ -81,6 +81,12 @@ Tareas completadas y validadas.
   - Verificación de permisos antes de mostrar notificaciones
   - Notificación incluye acción para abrir la app
   - Mensaje personalizado según cantidad de items
+  - **Mejoras aplicadas**:
+    - Notificación con `IMPORTANCE_HIGH` y `PRIORITY_HIGH` para mejor visibilidad
+    - `BigTextStyle` implementado para mostrar contenido completo
+    - `PendingIntent` corregido para evitar reinicio de app (FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE)
+    - `launchMode="singleTop"` agregado a MainActivity para manejar navegación desde notificaciones
+    - Lógica de navegación mejorada en `MainContent.kt` para detectar intents de notificaciones
 
 ### ✅ Navegación y UI Base
 - [x] **Sistema de navegación con Compose Navigation**
@@ -265,6 +271,13 @@ Tareas completadas y validadas.
 - [x] **Aumentar ancho del Sidebar de 50% a 75%**
   - ModalDrawerSheet configurado con `0.75f` del ancho de pantalla
   - Implementado en `MainContent.kt` línea 113
+
+- [x] **Implementar pantalla de Splash con logo de Mil Sabores**
+  - Archivo `SplashScreen.kt` creado e implementado
+  - Animación de scale con spring animation
+  - Navegación automática según estado de autenticación
+  - Ruta agregada en `AppNavigation.kt` como `startDestination`
+  - Correcciones aplicadas: Animación de Compose, NavHostController
 
 ---
 
@@ -602,37 +615,33 @@ Tareas completadas y validadas.
   - **Documentación**: Agregar sección en README sobre planificación
 
 #### 🎨 Mejoras de UI/UX (Opcional - Mejora experiencia)
-- [ ] **Implementar pantalla de Splash con logo de Mil Sabores**
+- [x] **Implementar pantalla de Splash con logo de Mil Sabores** ✅ COMPLETADO
   - **Contexto**: Pantalla inicial que se muestra al abrir la app, con el logo de la pastelería
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/splash/SplashScreen.kt`
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/splash/SplashScreen.kt`
   - **Logo**: El logo ya existe en `app/src/main/res/drawable/logo_milsabores.png`
-  - **Implementación**:
-    - Crear composable `SplashScreen` con diseño centrado
-    - Mostrar el logo usando `Image(painter = painterResource(id = R.drawable.logo_milsabores), ...)`
-    - Agregar animación de fade-in o scale para el logo (opcional pero recomendado)
-    - Usar `LaunchedEffect` con `delay(2000-3000ms)` para mostrar la pantalla por 2-3 segundos
-    - Después del delay, navegar a la pantalla principal (Login o Home según estado de autenticación)
+  - **Implementado**:
+    - Composable `SplashScreen` creado con diseño centrado
+    - Logo mostrado usando `Image(painter = painterResource(id = R.drawable.logo_milsabores), ...)`
+    - Animación de scale implementada con `spring` animation (DampingRatioMediumBouncy)
+    - `LaunchedEffect` con `delay(2000ms)` para mostrar la pantalla por 2 segundos
+    - Navegación automática a Login o Home según estado de autenticación
+    - Texto "Mil Sabores" y "Pastelería" agregado debajo del logo
   - **Diseño**:
-    - Fondo: Usar `CardWhite` o color primario del tema
-    - Logo: Centrado vertical y horizontalmente
-    - Tamaño del logo: Aproximadamente 200-250dp de ancho (ajustar según necesidad)
-    - Opcional: Agregar texto "Mil Sabores" o "Pastelería" debajo del logo
+    - Fondo: `CardWhite`
+    - Logo: Centrado vertical y horizontalmente, tamaño 250.dp
+    - Texto con estilos Material3 (headlineMedium y titleMedium)
   - **Navegación**:
-    - Modificar `AppNavigation.kt` para que `startDestination` sea `Screen.Splash.route`
-    - Agregar ruta `Splash` en el enum `Screen` (si no existe)
-    - En `SplashScreen`, después del delay, navegar a `Screen.Login.route` o `Screen.Home.route`
-    - Usar `navController.navigate()` con `popUpTo(Screen.Splash.route) { inclusive = true }` para remover splash del back stack
-  - **Archivos a modificar**:
-    - `app/src/main/java/com/example/milsaborestest/presentation/navigation/AppNavigation.kt` (agregar ruta Splash)
-    - `app/src/main/java/com/example/milsaborestest/presentation/navigation/Screen.kt` (agregar objeto Splash si no existe)
-    - `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt` (cambiar startDestination si es necesario)
-  - **Consideraciones**:
-    - La pantalla debe ser simple y rápida (no bloquear el inicio de la app)
-    - Si el usuario ya está autenticado, navegar directamente a Home
-    - Si no está autenticado, navegar a Login
-    - Usar `rememberCoroutineScope()` para manejar la coroutine del delay
-    - Considerar usar `AnimatedVisibility` o `AnimatedContent` para transiciones suaves
-  - **Testing**: Verificar que la pantalla se muestra correctamente y navega después del delay
+    - `AppNavigation.kt` configurado con `startDestination = Screen.Splash.route`
+    - Ruta `Splash` agregada en `Screen.kt`
+    - Navegación con `popUpTo(Screen.Splash.route) { inclusive = true }` para remover splash del back stack
+  - **Archivos modificados**:
+    - ✅ `app/src/main/java/com/example/milsaborestest/presentation/navigation/AppNavigation.kt` (ruta Splash agregada)
+    - ✅ `app/src/main/java/com/example/milsaborestest/presentation/navigation/Screen.kt` (objeto Splash agregado)
+    - ✅ `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt` (lógica para ocultar bottom bar en splash)
+  - **Correcciones aplicadas**:
+    - Animación corregida: Reemplazado `OvershootInterpolator` (Android View) por `spring` de Compose
+    - Tipo de parámetro corregido: `NavHostController` en lugar de `NavController`
+  - **Estado**: Funcionando correctamente
 
 ---
 
@@ -641,21 +650,22 @@ Tareas completadas y validadas.
 
 | Columna | Cantidad | Porcentaje |
 |---------|----------|------------|
-| 🟢 Done | 43+ | ~73% |
+| 🟢 Done | 45+ | ~75% |
 | 🟠 Code Review | 2 | ~3% |
 | 🟡 Doing | 1 | ~2% |
-| 🔵 Backlog (Crítico) | 12 | ~20% |
+| 🔵 Backlog (Crítico) | 10 | ~17% |
 | 🟢 Post-Evaluación | 25+ | ~2% |
 
 ### 📈 Progreso para Evaluación
 
 **Tareas Críticas Restantes:**
-- ⚠️ Recursos Nativos: 4/12 tareas (33%) - **EN PROGRESO** (Notificaciones ✅, Galería ⏳)
+- ⚠️ Recursos Nativos: 4/10 tareas (40%) - **EN PROGRESO** (Notificaciones ✅✅, Galería ⏳)
 - ✅ README.md: 1/1 tarea (100%) - **COMPLETADO**
 - ✅ Animaciones: 4/4 tareas (100%) - **COMPLETADO** ✨
+- ✅ Splash Screen: 1/1 tarea (100%) - **COMPLETADO**
 - ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
 
-**Total crítico pendiente: 8 tareas** (4 de notificaciones completadas, 8 de galería pendientes)
+**Total crítico pendiente: 6 tareas** (Notificaciones completadas y mejoradas, 6 de galería pendientes)
 
 ---
 
@@ -704,9 +714,23 @@ Tareas completadas y validadas.
 ---
 
 **Última actualización**: 25-11-2025  
-**Próxima revisión**: Al completar recursos nativos
+**Próxima revisión**: Al completar recursos nativos (galería)
 
 ### 🎉 Actualizaciones Recientes
+
+**25-11-2025 - Splash Screen y Mejoras de Notificaciones**
+- ✅ Implementada pantalla de Splash con logo de Mil Sabores
+- ✅ Animación de scale con spring animation (DampingRatioMediumBouncy)
+- ✅ Navegación automática según estado de autenticación
+- ✅ Correcciones aplicadas: Animación de Compose, NavHostController
+- ✅ Mejoras en sistema de notificaciones:
+  - Notificación con contenido completo (BigTextStyle)
+  - IMPORTANCE_HIGH y PRIORITY_HIGH para mejor visibilidad
+  - PendingIntent corregido para evitar reinicio de app
+  - launchMode="singleTop" en MainActivity
+  - Navegación mejorada desde notificaciones
+- ✅ Agregado `enableOnBackInvokedCallback="true"` al AndroidManifest
+- 📝 Commits: "[ FEAT ]: Implementar pantalla de Splash" y "[ FIX ]: Corregir errores de compilación y mejorar sistema de notificaciones"
 
 **25-11-2025 - Animaciones Mejoradas Completadas**
 - ✅ Implementadas todas las animaciones de feedback en componentes
@@ -759,19 +783,27 @@ Tareas completadas y validadas.
 
 ### ❌ Tareas Pendientes (Verificadas en Codebase)
 
-1. **SplashScreen**: ❌ No implementado
-   - No existe archivo `SplashScreen.kt`
-   - No existe ruta `Screen.Splash` en `Screen.kt`
-   - `AppNavigation.kt` no tiene ruta de Splash
-   - `startDestination` sigue siendo `Screen.Login.route`
+1. **SplashScreen**: ✅ COMPLETADO
+   - ✅ Archivo `SplashScreen.kt` creado e implementado
+   - ✅ Ruta `Screen.Splash` agregada en `Screen.kt`
+   - ✅ `AppNavigation.kt` tiene ruta de Splash configurada como `startDestination`
+   - ✅ Animación de scale con spring animation implementada
+   - ✅ Navegación automática según estado de autenticación
+   - ✅ Correcciones aplicadas: Animación de Compose, NavHostController
 
-2. **Recursos Nativos - Notificaciones**: ✅ COMPLETADO
+2. **Recursos Nativos - Notificaciones**: ✅ COMPLETADO Y MEJORADO
    - ✅ `NotificationHelper.kt` creado e implementado
    - ✅ Permisos de notificaciones agregados en `AndroidManifest.xml`
    - ✅ `MainActivity.kt` tiene lógica de `onPause()` para notificaciones
    - ✅ Canal de notificaciones creado en `onCreate()`
    - ✅ Detección de carrito abandonado funcionando
    - ✅ Notificación se muestra inmediatamente al perder foco de la app
+   - ✅ **Mejoras aplicadas**:
+     - Notificación con contenido completo (título y cuerpo) usando `BigTextStyle`
+     - `IMPORTANCE_HIGH` y `PRIORITY_HIGH` para mejor visibilidad
+     - `PendingIntent` corregido para evitar reinicio de app
+     - `launchMode="singleTop"` en MainActivity
+     - Navegación mejorada desde notificaciones en `MainContent.kt`
 
 3. **Recursos Nativos - Galería**: ⚠️ Parcialmente implementado
    - ✅ `UserEntity.kt` tiene campo `fotoPerfil` (completado)

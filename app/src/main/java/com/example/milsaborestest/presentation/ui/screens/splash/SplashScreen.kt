@@ -1,9 +1,8 @@
 package com.example.milsaborestest.presentation.ui.screens.splash
 
-// 1. AÑADIR EL IMPORT CORRECTO
-import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +25,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.milsaborestest.R
 import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
@@ -35,7 +34,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    navController: NavController,
+    navController: NavHostController,
     authViewModel: AuthViewModel
 ) {
     val scale = remember { Animatable(0f) }
@@ -44,12 +43,9 @@ fun SplashScreen(
     LaunchedEffect(key1 = true) {
         scale.animateTo(
             targetValue = 1f,
-            animationSpec = tween(
-                durationMillis = 1000,
-                easing = {
-                    // 2. USAR LA CLASE DIRECTAMENTE (SIN LA RUTA INCORRECTA)
-                    OvershootInterpolator(2f).getInterpolation(it)
-                }
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium
             )
         )
         delay(2000)

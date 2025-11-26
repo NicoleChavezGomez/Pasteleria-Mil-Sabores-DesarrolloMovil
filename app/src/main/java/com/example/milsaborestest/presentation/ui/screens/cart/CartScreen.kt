@@ -16,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.milsaborestest.R
 import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
@@ -158,6 +160,9 @@ fun CartItemRow(
             AsyncImage(
                 model = cartItem.imagen,
                 contentDescription = cartItem.nombre,
+                placeholder = painterResource(R.drawable.ic_product_default),
+                error = painterResource(R.drawable.ic_product_default),
+                fallback = painterResource(R.drawable.ic_product_default),
                 modifier = Modifier
                     .size(80.dp)
                     .clip(MaterialTheme.shapes.small),

@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.milsaborestest.domain.model.Product
@@ -63,6 +64,9 @@ fun ProductCard(
             AsyncImage(
                 model = product.imagen,
                 contentDescription = product.nombre,
+                placeholder = painterResource(R.drawable.ic_product_default),
+                error = painterResource(R.drawable.ic_product_default),
+                fallback = painterResource(R.drawable.ic_product_default),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)

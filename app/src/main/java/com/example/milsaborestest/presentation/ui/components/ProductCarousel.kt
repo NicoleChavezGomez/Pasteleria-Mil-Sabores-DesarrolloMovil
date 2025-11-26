@@ -19,8 +19,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.milsaborestest.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -53,6 +55,9 @@ fun ProductCarousel(
             AsyncImage(
                 model = item.image,
                 contentDescription = item.title,
+                placeholder = painterResource(R.drawable.ic_product_default),
+                error = painterResource(R.drawable.ic_product_default),
+                fallback = painterResource(R.drawable.ic_product_default),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onItemClick(item.productId) },

@@ -3,6 +3,7 @@ package com.example.milsaborestest.presentation.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,21 +18,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import android.content.Context
 import android.util.Log
+import coil.compose.AsyncImage
 import com.example.milsaborestest.presentation.viewmodel.SnackbarMessage
 import com.example.milsaborestest.R
 import com.example.milsaborestest.domain.model.User
 import com.example.milsaborestest.presentation.navigation.AppNavigation
 import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.ui.components.BottomNavBar
+import com.example.milsaborestest.presentation.ui.screens.account.ProfileImage
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 import com.example.milsaborestest.ui.theme.BackgroundPink
@@ -41,6 +47,7 @@ import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.formatPrice
+import java.io.File
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -457,25 +464,41 @@ fun NavigationDrawerContent(
                 verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
             ) {
                 if (isAuthenticated && user != null) {
+                    val context = LocalContext.current
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        Column(
+                        Row(
                             modifier = Modifier.padding(Design.PADDING_STANDARD),
-                            verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Design.PADDING_STANDARD)
                         ) {
-                            Text(
-                                text = user.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                            // Avatar con foto de perfil
+                            ProfileImage(
+                                user = user,
+                                context = context,
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
                             )
-                            Text(
-                                text = user.email,
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                            
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                            ) {
+                                Text(
+                                    text = user.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = user.email,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))

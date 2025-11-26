@@ -160,5 +160,54 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun clearMessage() {
         _message.value = null
     }
+    
+    /**
+     * Actualiza la foto de perfil del usuario autenticado
+     * @param imagePath Ruta absoluta de la imagen guardada
+     */
+    fun updateProfilePhoto(imagePath: String) {
+        viewModelScope.launch {
+            try {
+                val currentUser = _user.value
+                if (currentUser == null) {
+                    _message.value = "No hay usuario autenticado"
+                    return@launch
+                }
+                
+                val userId = currentUser.id.toIntOrNull()
+                if (userId == null) {
+                    _message.value = "ID de usuario inválido"
+                    return@launch
+                }
+                
+                // Obtener el usuario de la base de datos
+                val userEntity = userDao.obtenerPorId(userId)
+                if (userEntity == null) {
+                    _message.value = "Usuario no encontrado en la base de datos"
+                    return@launch
+                }
+                
+                // Actualizar fotoPerfil en la base de datos
+                val updatedEntity = userEntity.copy(fotoPerfil = imagePath)
+                userDao.actualizar(updatedEntity)
+                
+                // Actualizar el StateFlow con la nueva información
+                val updatedUser = User(
+                    id = updatedEntity.id.toString(),
+                    email = updatedEntity.email,
+                    name = updatedEntity.nombre,
+                    loginDate = currentUser.loginDate,
+                    isAuthenticated = true,
+                    fotoPerfil = imagePath
+                )
+                
+                _user.value = updatedUser
+                _message.value = "Foto de perfil actualizada exitosamente"
+                
+            } catch (e: Exception) {
+                _message.value = "Error al actualizar foto de perfil: ${e.message}"
+            }
+        }
+    }
 }
 

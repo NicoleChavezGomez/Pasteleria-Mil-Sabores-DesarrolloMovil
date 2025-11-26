@@ -1,6 +1,13 @@
 package com.example.milsaborestest.presentation.ui.screens.account
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -9,22 +16,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.milsaborestest.R
+import com.example.milsaborestest.domain.model.User
 import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants.Design
+import com.example.milsaborestest.util.ImageHelper
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +48,33 @@ fun AccountScreen(
 ) {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
+    val context = LocalContext.current
+    
+    // Launcher para seleccionar imagen de galería
+    val pickMedia = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null && user != null) {
+            // Convertir URI a Bitmap
+            val bitmap = ImageHelper.uriToBitmap(context, uri)
+            if (bitmap != null) {
+                val userId = user!!.id.toIntOrNull()
+                if (userId != null) {
+                    // Eliminar imagen antigua si existe
+                    user?.fotoPerfil?.let { oldPath ->
+                        ImageHelper.deleteProfileImage(context, oldPath)
+                    }
+                    
+                    // Guardar nueva imagen
+                    val imagePath = ImageHelper.saveProfileImage(context, bitmap, userId)
+                    if (imagePath != null) {
+                        // Actualizar en ViewModel y base de datos
+                        authViewModel.updateProfilePhoto(imagePath)
+                    }
+                }
+            }
+        }
+    }
     
     Column(modifier = Modifier.fillMaxSize()) {
         // TopBar
@@ -66,13 +107,41 @@ fun AccountScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Design.PADDING_MEDIUM)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_milsabores),
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                    )
+                    // Avatar con foto de perfil o imagen por defecto
+                    Box(
+                        modifier = Modifier.size(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ProfileImage(
+                            user = user!!,
+                            context = context,
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                        )
+                        
+                        // Botón flotante para editar foto
+                        FloatingActionButton(
+                            onClick = {
+                                pickMedia.launch(
+                                    ActivityResultContracts.PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(32.dp),
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar foto",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                     
                     Text(
                         text = user!!.name,
@@ -155,6 +224,47 @@ fun AccountScreen(
                 )
             }
         }
+    }
+}
+
+/**
+ * Componente para mostrar la foto de perfil con manejo de errores
+ */
+@Composable
+fun ProfileImage(
+    user: User,
+    context: Context,
+    modifier: Modifier = Modifier
+) {
+    val imagePath = user.fotoPerfil
+    
+    if (imagePath != null && imagePath.isNotBlank()) {
+        // Intentar cargar imagen desde storage
+        val imageFile = File(imagePath)
+        if (imageFile.exists()) {
+            AsyncImage(
+                model = imageFile,
+                contentDescription = "Foto de perfil",
+                placeholder = painterResource(R.drawable.ic_profile_default),
+                error = painterResource(R.drawable.ic_profile_default),
+                fallback = painterResource(R.drawable.ic_profile_default),
+                modifier = modifier
+            )
+        } else {
+            // Archivo no existe, mostrar imagen por defecto
+            Image(
+                painter = painterResource(R.drawable.ic_profile_default),
+                contentDescription = "Foto de perfil por defecto",
+                modifier = modifier
+            )
+        }
+    } else {
+        // No hay foto, mostrar imagen por defecto
+        Image(
+            painter = painterResource(R.drawable.ic_profile_default),
+            contentDescription = "Foto de perfil por defecto",
+            modifier = modifier
+        )
     }
 }
 

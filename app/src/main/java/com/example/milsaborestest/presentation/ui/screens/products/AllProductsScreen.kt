@@ -102,8 +102,23 @@ fun AllProductsScreen(
         // Contenido
         Box(modifier = Modifier.weight(1f)) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Filtros colapsables
-                if (showFilters) {
+                // Filtros colapsables con animación
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = showFilters,
+                    enter = androidx.compose.animation.expandVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        )
+                    ) + androidx.compose.animation.fadeIn(
+                        animationSpec = tween(durationMillis = 300)
+                    ),
+                    exit = androidx.compose.animation.shrinkVertically(
+                        animationSpec = tween(durationMillis = 200)
+                    ) + androidx.compose.animation.fadeOut(
+                        animationSpec = tween(durationMillis = 200)
+                    )
+                ) {
                     when (val currentCategoriesState = categoriesState) {
                         is UiState.Loading -> {
                             // No mostrar nada mientras carga

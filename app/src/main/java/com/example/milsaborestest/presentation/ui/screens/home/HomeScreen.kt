@@ -206,6 +206,16 @@ fun ExpandableSection(
     trailingButton: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
+    // Animación de rotación para el icono
+    val rotationAngle by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+        ),
+        label = "iconRotation"
+    )
+    
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
@@ -225,14 +235,33 @@ fun ExpandableSection(
                 )
                 Spacer(modifier = Modifier.width(Design.PADDING_SMALL))
                 Icon(
-                    if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) "Colapsar" else "Expandir"
+                    Icons.Filled.ExpandMore,
+                    contentDescription = if (expanded) "Colapsar" else "Expandir",
+                    modifier = Modifier.androidx.compose.ui.graphics.graphicsLayer {
+                        rotationZ = rotationAngle
+                    }
                 )
             }
             trailingButton?.invoke()
         }
         
-        if (expanded) {
+        // Contenido con animación
+        androidx.compose.animation.AnimatedVisibility(
+            visible = expanded,
+            enter = androidx.compose.animation.expandVertically(
+                animationSpec = androidx.compose.animation.core.spring(
+                    dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                    stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                )
+            ) + androidx.compose.animation.fadeIn(
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
+            ),
+            exit = androidx.compose.animation.shrinkVertically(
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 200)
+            ) + androidx.compose.animation.fadeOut(
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 200)
+            )
+        ) {
             content()
         }
     }
@@ -275,29 +304,35 @@ fun CategoriesSection(
     categoriesState: UiState<List<Category>>,
     onCategoryClick: (String) -> Unit
 ) {
-    when (categoriesState) {
-        is UiState.Loading -> {
-            CategoryRowSkeleton(itemCount = 5)
-        }
-        is UiState.Success -> {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
-            ) {
-                items(categoriesState.data) { category ->
-                    CategoryCard(
-                        category = category,
-                        onCategoryClick = onCategoryClick,
-                        modifier = Modifier.width(150.dp)
-                    )
+    androidx.compose.animation.Crossfade(
+        targetState = categoriesState,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300),
+        label = "categoriesStateCrossfade"
+    ) { currentState ->
+        when (currentState) {
+            is UiState.Loading -> {
+                CategoryRowSkeleton(itemCount = 5)
+            }
+            is UiState.Success -> {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                ) {
+                    items(currentState.data) { category ->
+                        CategoryCard(
+                            category = category,
+                            onCategoryClick = onCategoryClick,
+                            modifier = Modifier.width(150.dp)
+                        )
+                    }
                 }
             }
-        }
-        is UiState.Error -> {
-            Text(
-                text = "Error: ${categoriesState.message}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error
-            )
+            is UiState.Error -> {
+                Text(
+                    text = "Error: ${currentState.message}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }

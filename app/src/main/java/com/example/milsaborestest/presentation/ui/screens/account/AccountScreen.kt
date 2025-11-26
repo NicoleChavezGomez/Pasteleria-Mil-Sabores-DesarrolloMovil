@@ -124,9 +124,7 @@ fun AccountScreen(
                         FloatingActionButton(
                             onClick = {
                                 pickMedia.launch(
-                                    ActivityResultContracts.PickVisualMediaRequest(
-                                        ActivityResultContracts.PickVisualMedia.ImageOnly
-                                    )
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
                                 )
                             },
                             modifier = Modifier

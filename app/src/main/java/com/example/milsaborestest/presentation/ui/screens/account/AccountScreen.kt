@@ -2,6 +2,7 @@ package com.example.milsaborestest.presentation.ui.screens.account
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,28 +47,38 @@ fun AccountScreen(
     val context = LocalContext.current
     
     // Launcher para seleccionar imagen de galería
+    // ✅ BEST PRACTICE: El launcher se registra en rememberLauncherForActivityResult
+    // que es la forma correcta en Compose, equivalente a registerForActivityResult en Fragment/Activity
     val pickMedia = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
-        if (uri != null && user != null) {
-            // Convertir URI a Bitmap
-            val bitmap = ImageHelper.uriToBitmap(context, uri)
-            if (bitmap != null) {
-                val userId = user!!.id.toIntOrNull()
-                if (userId != null) {
-                    // Eliminar imagen antigua si existe
-                    user?.fotoPerfil?.let { oldPath ->
-                        ImageHelper.deleteProfileImage(context, oldPath)
-                    }
-                    
-                    // Guardar nueva imagen
-                    val imagePath = ImageHelper.saveProfileImage(context, bitmap, userId)
-                    if (imagePath != null) {
-                        // Actualizar en ViewModel y base de datos
-                        authViewModel.updateProfilePhoto(imagePath)
+        // ✅ SAFE & IDIOMATIC: Manejo seguro del resultado nullable
+        uri?.let { imageUri ->
+            // El usuario seleccionó una imagen
+            val currentUser = user
+            if (currentUser != null) {
+                // Convertir URI a Bitmap usando ContentResolver
+                val bitmap = ImageHelper.uriToBitmap(context, imageUri)
+                bitmap?.let { selectedBitmap ->
+                    val userId = currentUser.id.toIntOrNull()
+                    userId?.let { id ->
+                        // Eliminar imagen antigua si existe
+                        currentUser.fotoPerfil?.let { oldPath ->
+                            ImageHelper.deleteProfileImage(context, oldPath)
+                        }
+                        
+                        // Guardar nueva imagen
+                        val imagePath = ImageHelper.saveProfileImage(context, selectedBitmap, id)
+                        imagePath?.let { path ->
+                            // Actualizar en ViewModel y base de datos
+                            authViewModel.updateProfilePhoto(path)
+                        }
                     }
                 }
             }
+        } ?: run {
+            // El usuario canceló o cerró el selector
+            Log.d("AccountScreen", "Selección de imagen cancelada")
         }
     }
     
@@ -118,8 +129,11 @@ fun AccountScreen(
                         // Botón flotante para editar foto
                         FloatingActionButton(
                             onClick = {
+                                // ✅ BEST PRACTICE: Usar builder pattern para mejor legibilidad
                                 pickMedia.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    PickVisualMediaRequest.Builder()
+                                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        .build()
                                 )
                             },
                             modifier = Modifier

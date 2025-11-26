@@ -8,12 +8,9 @@
     <!-- Permiso para notificaciones (Android 13+ / API 33+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
-    <!-- Permisos para galería (lectura de imágenes) -->
-    <!-- Para Android 12 y anteriores (API 32-) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
-                     android:maxSdkVersion="32" />
-    <!-- Para Android 13+ (API 33+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- NOTA: No se requieren permisos de almacenamiento para el Photo Picker.
+         El Photo Picker proporciona acceso temporal y seguro a las imágenes seleccionadas
+         sin necesidad de permisos READ_EXTERNAL_STORAGE o READ_MEDIA_IMAGES. -->
 
     <application
         android:name=".di.MilSaboresApplication"

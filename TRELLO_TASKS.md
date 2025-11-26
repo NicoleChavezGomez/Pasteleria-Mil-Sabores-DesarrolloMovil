@@ -584,6 +584,167 @@ Tareas completadas y validadas.
   - **Manejo de errores**: Implementado con try-catch, mensajes de error en `_message.value`
   - **Estado**: Funcionando correctamente, foto persiste después de logout/login
 
+#### 📦 Migración de Productos de JSON a Room Database
+- [ ] **Crear entidad CategoryEntity para categorías en base de datos**
+  - **Contexto**: Migrar categorías de JSON a Room Database para tener todo centralizado
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/CategoryEntity.kt`
+  - **Campos sugeridos**:
+    - `id: String` (PrimaryKey) - ID de la categoría (ej: "tortas-cuadradas")
+    - `nombre: String` - Nombre de la categoría (ej: "Tortas Cuadradas")
+    - `icono: String` - Icono de la categoría (ej: "square")
+  - **Consideraciones**:
+    - ID es String porque viene del JSON como clave del map
+    - No necesita autoGenerate, el ID viene del JSON
+
+- [ ] **Crear entidad ProductEntity para productos en base de datos**
+  - **Contexto**: Migrar productos de JSON a Room Database, usando la misma metodología que usuarios por defecto
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/ProductEntity.kt`
+  - **Campos sugeridos**:
+    - `id: String` (PrimaryKey) - ID del producto (ej: "TC001")
+    - `categoryId: String` - ID de la categoría (Foreign Key a CategoryEntity)
+    - `nombre: String` - Nombre del producto
+    - `precio: Int` - Precio en pesos chilenos
+    - `imagen: String` - URL de la imagen del producto
+    - `descripcion: String` - Descripción corta
+    - `descripcionDetallada: String` - Descripción completa
+    - `rating: Double` - Rating promedio (1.0 - 5.0)
+    - `reviews: Int` - Cantidad de reseñas
+    - `porciones: String` - Información de porciones
+    - `calorias: String` - Información de calorías
+    - `ingredientes: String` - Lista de ingredientes
+  - **Consideraciones**:
+    - `categoryId` como Foreign Key a CategoryEntity
+    - No incluir `reseñas` en ProductEntity (se manejará con ReviewEntity separada)
+    - Rating y reviews se calcularán dinámicamente desde ReviewEntity cuando se implemente
+
+- [ ] **Crear CategoryDao con queries necesarias**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/CategoryDao.kt`
+  - **Queries a implementar**:
+    - `@Insert suspend fun insertar(category: CategoryEntity): Long` - Insertar nueva categoría
+    - `@Insert suspend fun insertarTodas(categories: List<CategoryEntity>)` - Insertar múltiples categorías
+    - `@Query("SELECT * FROM categorias ORDER BY nombre ASC") suspend fun obtenerTodas(): List<CategoryEntity>` - Obtener todas las categorías
+    - `@Query("SELECT * FROM categorias WHERE id = :id") suspend fun obtenerPorId(id: String): CategoryEntity?` - Obtener categoría por ID
+  - **Consideraciones**:
+    - Usar `suspend` para operaciones asíncronas
+    - Ordenar por nombre para consistencia
+
+- [ ] **Crear ProductDao con queries necesarias**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/ProductDao.kt`
+  - **Queries a implementar**:
+    - `@Insert suspend fun insertar(product: ProductEntity): Long` - Insertar nuevo producto
+    - `@Insert suspend fun insertarTodos(products: List<ProductEntity>)` - Insertar múltiples productos
+    - `@Query("SELECT * FROM productos ORDER BY nombre ASC") suspend fun obtenerTodos(): List<ProductEntity>` - Obtener todos los productos
+    - `@Query("SELECT * FROM productos WHERE id = :id") suspend fun obtenerPorId(id: String): ProductEntity?` - Obtener producto por ID
+    - `@Query("SELECT * FROM productos WHERE categoryId = :categoryId ORDER BY nombre ASC") suspend fun obtenerPorCategoria(categoryId: String): List<ProductEntity>` - Obtener productos por categoría
+    - `@Query("SELECT * FROM productos WHERE nombre LIKE '%' || :searchTerm || '%' OR descripcion LIKE '%' || :searchTerm || '%'") suspend fun buscar(searchTerm: String): List<ProductEntity>` - Búsqueda de productos
+  - **Consideraciones**:
+    - Usar `suspend` para operaciones asíncronas
+    - Búsqueda con LIKE para texto parcial
+    - Ordenar por nombre para consistencia
+
+- [ ] **Crear mappers para convertir entre Entity y Domain**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/mapper/CategoryMapper.kt`
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/mapper/ProductMapper.kt` (actualizar existente)
+  - **Funciones a implementar**:
+    - `fun CategoryEntity.toDomain(products: List<Product> = emptyList()): Category` - Convertir entidad a modelo de dominio
+    - `fun Category.toEntity(): CategoryEntity` - Convertir modelo a entidad
+    - `fun ProductEntity.toDomain(reseñas: List<Review> = emptyList()): Product` - Actualizar mapper existente para usar Entity
+    - `fun Product.toEntity(categoryId: String): ProductEntity` - Convertir modelo a entidad
+  - **Consideraciones**:
+    - Mantener compatibilidad con mappers existentes si es posible
+    - Reseñas se cargarán por separado desde ReviewEntity cuando se implemente
+
+- [ ] **Implementar carga de productos y categorías default desde JSON usando misma metodología que usuarios**
+  - **Contexto**: Cargar productos y categorías desde `productos.json` como datos default en la base de datos, igual que se hace con usuarios
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Metodología** (igual que usuarios por defecto):
+    1. En función `insertarDatosPorDefecto()`, agregar lógica para cargar productos y categorías
+    2. Leer `productos.json` usando `ProductJsonDataSource` o similar
+    3. Verificar si ya existen productos/categorías para evitar duplicados
+    4. Para cada categoría del JSON:
+       - Crear `CategoryEntity` con id, nombre, icono
+       - Insertar en base de datos
+    5. Para cada producto del JSON:
+       - Crear `ProductEntity` con todos los campos
+       - Asociar con `categoryId` correspondiente
+       - Insertar en base de datos
+    6. Solo cargar una vez (verificar si ya existen datos)
+  - **Consideraciones**:
+    - Usar `ProductJsonDataSource` existente para leer JSON
+    - Verificar existencia antes de insertar para evitar duplicados
+    - Mantener la misma estructura de datos que el JSON
+    - Las reseñas del JSON se manejarán por separado con ReviewEntity
+
+- [ ] **Actualizar AppDatabase para incluir nuevas entidades y DAOs**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Modificaciones**:
+    1. Agregar `CategoryEntity` y `ProductEntity` a la lista de entidades en `@Database`
+    2. Incrementar versión de base de datos (de 3 a 4, o según corresponda)
+    3. Crear migración `MIGRATION_3_4` (o la versión correspondiente):
+       - Crear tabla `categorias`
+       - Crear tabla `productos` con Foreign Key a `categorias`
+    4. Agregar `categoryDao(): CategoryDao` al `AppDatabase`
+    5. Agregar `productDao(): ProductDao` al `AppDatabase`
+    6. Agregar migración al builder con `.addMigrations(MIGRATION_X_Y)`
+  - **SQL sugerido**:
+    ```sql
+    CREATE TABLE categorias (
+        id TEXT PRIMARY KEY,
+        nombre TEXT NOT NULL,
+        icono TEXT NOT NULL
+    );
+    
+    CREATE TABLE productos (
+        id TEXT PRIMARY KEY,
+        categoryId TEXT NOT NULL,
+        nombre TEXT NOT NULL,
+        precio INTEGER NOT NULL,
+        imagen TEXT NOT NULL,
+        descripcion TEXT NOT NULL,
+        descripcionDetallada TEXT NOT NULL,
+        rating REAL NOT NULL,
+        reviews INTEGER NOT NULL,
+        porciones TEXT NOT NULL,
+        calorias TEXT NOT NULL,
+        ingredientes TEXT NOT NULL,
+        FOREIGN KEY(categoryId) REFERENCES categorias(id)
+    );
+    ```
+
+- [ ] **Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/repository/ProductRepositoryImpl.kt`
+  - **Cambios necesarios**:
+    1. Inyectar `ProductDao` y `CategoryDao` en lugar de (o además de) `ProductJsonDataSource`
+    2. Modificar `getCategories()` para:
+       - Obtener categorías desde `CategoryDao`
+       - Obtener productos de cada categoría desde `ProductDao`
+       - Convertir a modelos de dominio usando mappers
+    3. Modificar `getProductsByCategory()` para usar `ProductDao.obtenerPorCategoria()`
+    4. Modificar `getProductById()` para usar `ProductDao.obtenerPorId()`
+    5. Modificar `getAllProducts()` para usar `ProductDao.obtenerTodos()`
+  - **Consideraciones**:
+    - Mantener compatibilidad con la interfaz `ProductRepository`
+    - Cargar reseñas desde ReviewEntity cuando se implemente (por ahora lista vacía)
+    - Si no hay datos en BD, cargar desde JSON como fallback (opcional)
+
+- [ ] **Actualizar AppModule para inyectar nuevos DAOs**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/di/AppModule.kt`
+  - **Modificaciones**:
+    1. Agregar `@Provides fun provideCategoryDao(database: AppDatabase) = database.categoryDao()`
+    2. Agregar `@Provides fun provideProductDao(database: AppDatabase) = database.productDao()`
+  - **Consideraciones**:
+    - Mantener inyección de `ProductJsonDataSource` si se usa como fallback o para carga inicial
+    - Los DAOs se inyectarán en `ProductRepositoryImpl`
+
+- [ ] **Eliminar o deprecar ProductJsonDataSource**
+  - **Contexto**: Una vez migrado todo a Room, el JSON solo se usará para carga inicial
+    - **Opción B**: Eliminar completamente y cargar datos directamente en `insertarDatosPorDefecto()` sin DataSource
+
+  - **Archivos afectados**:
+    - `ProductJsonDataSource.kt` - Mantener o eliminar según opción
+    - `AppModule.kt` - Actualizar inyección si se elimina
+    - `ProductRepositoryImpl.kt` - Ya no usaría JSON para consultas
+
 #### 🛒 Checkout e Historial de Compras
 - [ ] **Crear entidad PurchaseEntity/OrderEntity para compras**
   - **Contexto**: Necesitamos almacenar el historial de compras de los usuarios
@@ -949,22 +1110,28 @@ Tareas completadas y validadas.
 
 | Columna | Cantidad | Porcentaje |
 |---------|----------|------------|
-| 🟢 Done | 45+ | ~75% |
-| 🟠 Code Review | 2 | ~3% |
-| 🟡 Doing | 1 | ~2% |
-| 🔵 Backlog (Crítico) | 10 | ~17% |
-| 🟢 Post-Evaluación | 25+ | ~2% |
+| 🟢 Done | 50+ | ~60% |
+| 🟠 Code Review | 1 | ~1% |
+| 🟡 Doing | 0 | ~0% |
+| 🔵 Backlog (Crítico) | 28 | ~33% |
+| 🔵 Backlog (Post-Evaluación) | 5+ | ~6% |
 
 ### 📈 Progreso para Evaluación
 
-**Tareas Críticas Restantes:**
-- ⚠️ Recursos Nativos: 4/10 tareas (40%) - **EN PROGRESO** (Notificaciones ✅✅, Galería ⏳)
+**Tareas Críticas Completadas:**
+- ✅ Recursos Nativos: 12/13 tareas (92%) - **CASI COMPLETADO** (Notificaciones ✅✅, Galería ✅✅, solo falta imágenes por defecto en productos)
 - ✅ README.md: 1/1 tarea (100%) - **COMPLETADO**
 - ✅ Animaciones: 4/4 tareas (100%) - **COMPLETADO** ✨
 - ✅ Splash Screen: 1/1 tarea (100%) - **COMPLETADO**
-- ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
 
-**Total crítico pendiente: 6 tareas** (Notificaciones completadas y mejoradas, 6 de galería pendientes)
+**Tareas Críticas Pendientes:**
+- ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
+- ❌ Migración de Productos (JSON → Room): 0/9 tareas (0%) - **PENDIENTE**
+- ❌ Checkout e Historial de Compras: 0/8 tareas (0%) - **PENDIENTE**
+- ❌ Sistema de Reseñas: 0/9 tareas (0%) - **PENDIENTE**
+- ⚠️ Imágenes por defecto en productos: 0/1 tarea (0%) - **PENDIENTE** (no crítico)
+
+**Total crítico pendiente: 27 tareas** (1 Trello + 9 Migración + 8 Checkout + 9 Reseñas)
 
 ---
 
@@ -1137,7 +1304,21 @@ Tareas completadas y validadas.
    - ✅ FloatingActionButton para seleccionar foto de galería
    - ✅ Manejo de errores completo (muestra imagen por defecto en todos los casos)
 
-6. **Checkout e Historial de Compras**: ❌ PENDIENTE
+6. **Migración de Productos de JSON a Room Database**: ❌ PENDIENTE
+   - ❌ `CategoryEntity.kt` no existe (entidad para categorías)
+   - ❌ `ProductEntity.kt` no existe (entidad para productos)
+   - ❌ `CategoryDao.kt` no existe (DAO para categorías)
+   - ❌ `ProductDao.kt` no existe (DAO para productos)
+   - ❌ `CategoryMapper.kt` no existe (mapper para categorías)
+   - ❌ `ProductMapper.kt` no está actualizado para usar Entity (solo tiene mapper de DTO)
+   - ❌ `AppDatabase.kt` no tiene tablas `categorias` ni `productos`
+   - ❌ `AppDatabase.kt` no carga productos/categorías default desde JSON (solo carga usuarios)
+   - ❌ `ProductRepositoryImpl.kt` usa `ProductJsonDataSource` para todas las consultas (no usa DAO)
+   - ❌ `AppModule.kt` no inyecta `CategoryDao` ni `ProductDao`
+   - ⚠️ **Estado actual**: Productos se cargan completamente desde JSON (`productos.json` en assets)
+   - ⚠️ **Objetivo**: Migrar a Room Database usando misma metodología que usuarios por defecto
+
+7. **Checkout e Historial de Compras**: ❌ PENDIENTE
    - ❌ `PurchaseEntity.kt` no existe (entidad para compras)
    - ❌ `PurchaseDao.kt` no existe (DAO para operaciones de compras)
    - ❌ Modelo de dominio `Purchase.kt` no existe
@@ -1148,7 +1329,7 @@ Tareas completadas y validadas.
    - ❌ No hay funcionalidad para simular compra desde el carrito
    - ❌ No hay persistencia de historial de compras de usuarios
 
-7. **Sistema de Reseñas**: ❌ PENDIENTE
+8. **Sistema de Reseñas**: ❌ PENDIENTE
    - ❌ `ReviewEntity.kt` no existe (entidad para reseñas en BD)
    - ❌ `ReviewDao.kt` no existe (DAO para operaciones de reseñas)
    - ❌ Modelo de dominio `Review.kt` no tiene campo `userId` (solo tiene autor, fecha, rating, comentario)

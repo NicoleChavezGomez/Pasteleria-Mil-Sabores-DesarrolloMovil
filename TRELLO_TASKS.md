@@ -1294,9 +1294,18 @@ Tareas completadas y validadas.
    - ✅ `AuthViewModel` tiene función `updateProfilePhoto()` para actualizar foto
    - ✅ Componente `ProfileImage` reutilizable creado
 
-4. **Imágenes por defecto en productos**: ⚠️ Parcialmente implementado
+4. **Imágenes por defecto en productos**: ✅ COMPLETADO
    - ✅ Drawables `ic_product_default` y `ic_profile_default` creados
-   - ❌ `ProductCard.kt` no tiene `placeholder`, `error`, ni `fallback` en `AsyncImage` (tarea independiente, no crítica)
+   - ✅ `ProductCard.kt` tiene `placeholder`, `error` y `fallback` en `AsyncImage`
+   - ✅ `ProductCarousel.kt` tiene `placeholder`, `error` y `fallback` en `AsyncImage`
+   - ✅ `ProductDetailScreen.kt` tiene `placeholder`, `error` y `fallback` en `AsyncImage`
+   - ✅ `CartScreen.kt` tiene `placeholder`, `error` y `fallback` en `AsyncImage`
+   - ✅ Todos los componentes manejan correctamente:
+     - Imagen por defecto mientras carga (placeholder)
+     - Imagen por defecto si falla la carga (error)
+     - Imagen por defecto si URL es null/vacía (fallback)
+   - ✅ Rama `feature/imagenes-por-defecto-productos` creada
+   - ✅ Commit: `[ FEAT ]: Implementar imágenes por defecto en componentes de productos`
 
 5. **Foto de perfil en AccountScreen**: ✅ COMPLETADO
    - ✅ `AccountScreen.kt` muestra foto de perfil con componente `ProfileImage`

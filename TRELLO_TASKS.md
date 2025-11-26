@@ -584,7 +584,324 @@ Tareas completadas y validadas.
   - **Manejo de errores**: Implementado con try-catch, mensajes de error en `_message.value`
   - **Estado**: Funcionando correctamente, foto persiste después de logout/login
 
+#### 🛒 Checkout e Historial de Compras
+- [ ] **Crear entidad PurchaseEntity/OrderEntity para compras**
+  - **Contexto**: Necesitamos almacenar el historial de compras de los usuarios
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseEntity.kt`
+  - **Campos sugeridos**:
+    - `id: String` (PrimaryKey) - ID único de la compra (puede ser UUID o timestamp)
+    - `userId: Int` - ID del usuario que realizó la compra (Foreign Key a UserEntity)
+    - `fecha: String` - Fecha de la compra (formato ISO o timestamp)
+    - `total: Int` - Total de la compra en pesos chilenos
+    - `items: String` - JSON string con los items comprados (o crear tabla separada PurchaseItemEntity)
+  - **Alternativa con tabla separada** (más normalizado):
+    - `PurchaseEntity`: id, userId, fecha, total
+    - `PurchaseItemEntity`: id, purchaseId (FK), productId, nombre, precio, cantidad, imagen
+  - **Consideraciones**:
+    - Usar relación Foreign Key con UserEntity
+    - Considerar usar tabla separada para items si se necesita más flexibilidad
+    - Almacenar snapshot de productos (nombre, precio) al momento de compra (productos pueden cambiar)
+  - **Archivos a modificar**:
+    - `AppDatabase.kt` (agregar entidad, incrementar versión, crear migración)
+    - Crear `PurchaseDao.kt` con queries para obtener compras por usuario
 
+- [ ] **Crear PurchaseDao con queries necesarias**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseDao.kt`
+  - **Queries a implementar**:
+    - `@Insert suspend fun insertar(purchase: PurchaseEntity): Long` - Insertar nueva compra
+    - `@Query("SELECT * FROM compras WHERE userId = :userId ORDER BY fecha DESC") suspend fun obtenerPorUsuario(userId: Int): List<PurchaseEntity>` - Obtener compras de un usuario
+    - `@Query("SELECT * FROM compras WHERE id = :id") suspend fun obtenerPorId(id: String): PurchaseEntity?` - Obtener compra específica
+    - Si se usa tabla separada: `@Query("SELECT * FROM purchase_items WHERE purchaseId = :purchaseId") suspend fun obtenerItemsPorCompra(purchaseId: String): List<PurchaseItemEntity>`
+  - **Consideraciones**:
+    - Usar `suspend` para operaciones asíncronas
+    - Ordenar por fecha descendente (más recientes primero)
+
+- [ ] **Crear modelo de dominio Purchase**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/domain/model/Purchase.kt`
+  - **Estructura sugerida**:
+    ```kotlin
+    data class Purchase(
+        val id: String,
+        val userId: String,
+        val fecha: String,
+        val total: Int,
+        val items: List<PurchaseItem>
+    )
+    
+    data class PurchaseItem(
+        val productId: String,
+        val nombre: String,
+        val precio: Int,
+        val cantidad: Int,
+        val imagen: String
+    )
+    ```
+  - **Mapper**: Crear `PurchaseMapper.kt` para convertir entre `PurchaseEntity` y `Purchase`
+
+- [ ] **Implementar PurchaseViewModel para gestionar compras**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/PurchaseViewModel.kt`
+  - **Funcionalidades**:
+    - `StateFlow<List<Purchase>>` para historial de compras
+    - `StateFlow<Purchase?>` para compra actual (si se necesita)
+    - Función `realizarCompra(cartItems: List<CartEntity>, userId: Int)` - Simular checkout
+    - Función `obtenerHistorialCompras(userId: Int)` - Cargar historial
+    - Función `obtenerCompraPorId(id: String)` - Obtener compra específica
+  - **Lógica de checkout**:
+    1. Validar que hay items en el carrito
+    2. Validar que el usuario está autenticado
+    3. Crear `PurchaseEntity` con items del carrito
+    4. Insertar en base de datos
+    5. Limpiar carrito (llamar a `CartViewModel.clearCart()`)
+    6. Mostrar mensaje de éxito
+    7. Navegar a pantalla de confirmación o historial
+  - **Consideraciones**:
+    - Usar `viewModelScope.launch` para operaciones asíncronas
+    - Manejar errores con try-catch
+    - Actualizar StateFlow después de operaciones exitosas
+
+- [ ] **Implementar función de checkout en CartViewModel o crear función separada**
+  - **Contexto**: Simular el proceso de compra desde el carrito
+  - **Opciones**:
+    - **Opción A**: Agregar función `checkout(userId: Int)` en `CartViewModel`
+    - **Opción B**: Crear función en `PurchaseViewModel` que reciba items del carrito
+  - **Recomendación**: Opción B (separación de responsabilidades)
+  - **Flujo**:
+    1. Usuario presiona botón "Comprar" en `CartScreen`
+    2. `CartScreen` llama a `PurchaseViewModel.realizarCompra(cartItems, userId)`
+    3. `PurchaseViewModel` crea `PurchaseEntity` y la inserta
+    4. `PurchaseViewModel` llama a `CartViewModel.clearCart()` para limpiar carrito
+    5. Mostrar mensaje de éxito/confirmación
+    6. Navegar a pantalla de historial o home
+
+- [ ] **Crear pantalla de Historial de Compras (PurchaseHistoryScreen)**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/purchasehistory/PurchaseHistoryScreen.kt`
+  - **Funcionalidades**:
+    - Mostrar lista de compras del usuario autenticado
+    - Ordenar por fecha (más recientes primero)
+    - Mostrar información de cada compra:
+      - Fecha de compra
+      - Total pagado
+      - Cantidad de items
+      - Lista expandible de items (opcional)
+    - Navegación a detalle de compra (opcional)
+  - **UI sugerida**:
+    - `LazyColumn` con items de compra
+    - `Card` para cada compra con información resumida
+    - Botón para expandir/ver detalles de items
+    - Estado vacío si no hay compras
+  - **Integración**:
+    - Usar `PurchaseViewModel` para obtener datos
+    - Usar `AuthViewModel` para obtener usuario autenticado
+    - Agregar ruta en `Screen.kt` y `AppNavigation.kt`
+
+- [ ] **Actualizar CartScreen con botón de checkout funcional**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/cart/CartScreen.kt`
+  - **Modificaciones**:
+    - Agregar validación: Solo mostrar botón "Comprar" si usuario está autenticado
+    - Si no está autenticado: Mostrar mensaje "Inicia sesión para comprar" o botón para ir a Login
+    - Al presionar "Comprar":
+      1. Validar que hay items en el carrito
+      2. Obtener usuario autenticado de `AuthViewModel`
+      3. Llamar a `PurchaseViewModel.realizarCompra(cartItems, userId)`
+      4. Mostrar diálogo de confirmación o snackbar de éxito
+      5. Navegar a pantalla de confirmación o historial
+  - **Consideraciones**:
+    - Deshabilitar botón si carrito está vacío
+    - Mostrar loading durante el proceso de checkout
+    - Manejar errores (mostrar mensaje al usuario)
+
+- [ ] **Agregar migración de base de datos para PurchaseEntity**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Pasos**:
+    1. Incrementar versión de base de datos (de 3 a 4)
+    2. Crear migración `MIGRATION_3_4`:
+       - Crear tabla `compras` con campos necesarios
+       - Si se usa tabla separada: Crear tabla `purchase_items` también
+    3. Agregar `PurchaseEntity` a la lista de entidades en `@Database`
+    4. Agregar `purchaseDao(): PurchaseDao` al `AppDatabase`
+    5. Agregar migración al builder con `.addMigrations(MIGRATION_3_4)`
+  - **SQL sugerido**:
+    ```sql
+    CREATE TABLE compras (
+        id TEXT PRIMARY KEY,
+        userId INTEGER NOT NULL,
+        fecha TEXT NOT NULL,
+        total INTEGER NOT NULL,
+        FOREIGN KEY(userId) REFERENCES usuario(id)
+    );
+    
+    -- Si se usa tabla separada:
+    CREATE TABLE purchase_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchaseId TEXT NOT NULL,
+        productId TEXT NOT NULL,
+        nombre TEXT NOT NULL,
+        precio INTEGER NOT NULL,
+        cantidad INTEGER NOT NULL,
+        imagen TEXT,
+        FOREIGN KEY(purchaseId) REFERENCES compras(id)
+    );
+    ```
+
+#### ⭐ Sistema de Reseñas
+- [ ] **Crear entidad ReviewEntity para reseñas en base de datos**
+  - **Contexto**: Necesitamos almacenar reseñas de productos asociadas a usuarios, permitiendo que usuarios agreguen sus propias reseñas
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/ReviewEntity.kt`
+  - **Campos sugeridos**:
+    - `id: Int` (PrimaryKey, autoGenerate = true) - ID único de la reseña
+    - `productId: String` - ID del producto (no FK, productos vienen de JSON)
+    - `userId: Int?` - ID del usuario que escribió la reseña (nullable, null para reseñas default)
+    - `autor: String` - Nombre del autor (para reseñas default, usar nombre del JSON)
+    - `fecha: String` - Fecha de la reseña
+    - `rating: Int` - Calificación (1-5 estrellas)
+    - `comentario: String` - Texto de la reseña
+  - **Consideraciones**:
+    - `userId` nullable porque las reseñas default del JSON no tienen usuario asociado
+    - `autor` siempre presente (para reseñas default viene del JSON, para nuevas viene del UserEntity)
+    - Almacenar `productId` como String (productos vienen de JSON, no de BD)
+
+- [ ] **Crear ReviewDao con queries necesarias**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/ReviewDao.kt`
+  - **Queries a implementar**:
+    - `@Insert suspend fun insertar(review: ReviewEntity): Long` - Insertar nueva reseña
+    - `@Query("SELECT * FROM reseñas WHERE productId = :productId ORDER BY fecha DESC") suspend fun obtenerPorProducto(productId: String): List<ReviewEntity>` - Obtener reseñas de un producto
+    - `@Query("SELECT * FROM reseñas WHERE userId = :userId") suspend fun obtenerPorUsuario(userId: Int): List<ReviewEntity>` - Obtener reseñas de un usuario
+    - `@Query("SELECT * FROM reseñas WHERE productId = :productId AND userId = :userId") suspend fun obtenerPorProductoYUsuario(productId: String, userId: Int): ReviewEntity?` - Verificar si usuario ya reseñó un producto
+    - `@Query("SELECT AVG(rating) FROM reseñas WHERE productId = :productId") suspend fun obtenerRatingPromedio(productId: String): Double?` - Calcular rating promedio
+    - `@Query("SELECT COUNT(*) FROM reseñas WHERE productId = :productId") suspend fun obtenerCantidadReseñas(productId: String): Int` - Contar reseñas de un producto
+  - **Consideraciones**:
+    - Usar `suspend` para operaciones asíncronas
+    - Ordenar por fecha descendente (más recientes primero)
+
+- [ ] **Actualizar modelo de dominio Review para incluir userId opcional**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/domain/model/Review.kt`
+  - **Modificaciones**:
+    - Agregar campo `userId: String?` (nullable) para identificar si la reseña es de un usuario registrado
+    - Mantener compatibilidad con reseñas existentes del JSON
+  - **Estructura actualizada sugerida**:
+    ```kotlin
+    data class Review(
+        val id: String? = null, // ID de la reseña en BD (null para reseñas del JSON)
+        val autor: String,
+        val fecha: String,
+        val rating: Int,
+        val comentario: String,
+        val userId: String? = null // ID del usuario (null para reseñas default)
+    )
+    ```
+
+- [ ] **Crear ReviewMapper para convertir entre ReviewEntity y Review**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/mapper/ReviewMapper.kt`
+  - **Funciones a implementar**:
+    - `fun ReviewEntity.toDomain(): Review` - Convertir entidad a modelo de dominio
+    - `fun Review.toEntity(productId: String, userId: Int?): ReviewEntity` - Convertir modelo a entidad
+    - `fun ReviewDto.toDomain(): Review` - Mantener conversión de DTO (para reseñas del JSON)
+  - **Consideraciones**:
+    - Manejar conversión de `Int` (userId en Entity) a `String` (userId en Domain)
+    - Manejar valores null para reseñas default
+
+- [ ] **Implementar carga de reseñas default desde JSON usando misma metodología que usuarios**
+  - **Contexto**: Cargar las reseñas que vienen en `productos.json` como reseñas default en la base de datos
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Metodología** (igual que usuarios por defecto):
+    1. En función `insertarDatosPorDefecto()`, agregar lógica para cargar reseñas
+    2. Leer `productos.json` usando `ProductJsonDataSource` o similar
+    3. Para cada producto, extraer sus reseñas del JSON
+    4. Convertir cada reseña a `ReviewEntity` con:
+       - `userId = null` (reseñas default no tienen usuario)
+       - `autor = review.autor` (del JSON)
+       - `productId = product.id` (del producto actual)
+       - Resto de campos del JSON
+    5. Verificar si ya existen reseñas para evitar duplicados
+    6. Insertar todas las reseñas default en la base de datos
+  - **Consideraciones**:
+    - Solo cargar reseñas default una vez (verificar si ya existen)
+    - Asociar cada reseña con su `productId` correspondiente
+    - Mantener las reseñas del JSON como "default" (userId = null)
+
+- [ ] **Crear ReviewViewModel para gestionar reseñas**
+  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/ReviewViewModel.kt`
+  - **Funcionalidades**:
+    - `StateFlow<List<Review>>` para reseñas de un producto
+    - `StateFlow<Double>` para rating promedio
+    - `StateFlow<Int>` para cantidad de reseñas
+    - Función `obtenerReseñasPorProducto(productId: String)` - Cargar reseñas de un producto
+    - Función `agregarReseña(productId: String, userId: Int, rating: Int, comentario: String)` - Agregar nueva reseña
+    - Función `verificarUsuarioYaReseñó(productId: String, userId: Int): Boolean` - Verificar si usuario ya reseñó
+    - Función `calcularRatingPromedio(productId: String)` - Calcular rating promedio
+  - **Lógica de agregar reseña**:
+    1. Validar que usuario está autenticado
+    2. Validar que rating está entre 1-5
+    3. Validar que comentario no está vacío
+    4. Verificar si usuario ya reseñó este producto (opcional: permitir solo una reseña por producto)
+    5. Obtener nombre del usuario de `UserEntity`
+    6. Crear `ReviewEntity` con fecha actual
+    7. Insertar en base de datos
+    8. Actualizar rating promedio y cantidad de reseñas
+    9. Recargar lista de reseñas
+  - **Consideraciones**:
+    - Usar `viewModelScope.launch` para operaciones asíncronas
+    - Manejar errores con try-catch
+    - Actualizar StateFlow después de operaciones exitosas
+
+- [ ] **Actualizar ProductDetailScreen para mostrar reseñas desde base de datos y permitir agregar nuevas**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/productdetail/ProductDetailScreen.kt`
+  - **Modificaciones**:
+    - Integrar `ReviewViewModel` para cargar reseñas desde BD (no solo del JSON)
+    - Mostrar reseñas combinadas: default (del JSON o BD) + nuevas (de usuarios)
+    - Agregar sección para que usuario autenticado agregue reseña:
+      - Formulario con rating (1-5 estrellas) y campo de texto para comentario
+      - Botón "Agregar Reseña"
+      - Validación: Solo mostrar si usuario está autenticado
+      - Validación: No permitir agregar si usuario ya reseñó (opcional)
+    - Actualizar rating promedio y cantidad de reseñas mostrados
+    - Mostrar indicador visual si reseña es del usuario actual
+  - **UI sugerida**:
+    - Sección "Agregar tu reseña" (solo si autenticado)
+    - Input para rating (selector de estrellas)
+    - TextField para comentario
+    - Botón "Enviar Reseña"
+    - Lista de reseñas con indicador de "Tu reseña" si es del usuario actual
+
+- [ ] **Actualizar ProductViewModel o crear lógica para combinar reseñas del JSON con reseñas de BD**
+  - **Contexto**: Los productos vienen del JSON con reseñas, pero ahora también tenemos reseñas en BD
+  - **Opciones**:
+    - **Opción A**: Modificar `ProductViewModel` para cargar reseñas desde BD y combinarlas con las del JSON
+    - **Opción B**: Cargar reseñas solo desde BD (migrar todas las del JSON a BD al inicio)
+  - **Recomendación**: Opción B (más limpio, todas las reseñas en un solo lugar)
+  - **Implementación**:
+    - Al cargar productos, no usar reseñas del JSON directamente
+    - Cargar reseñas desde `ReviewViewModel` usando `productId`
+    - Si no hay reseñas en BD para un producto, cargar las default del JSON y guardarlas en BD
+  - **Archivos a modificar**:
+    - `ProductViewModel.kt` - Modificar lógica de carga de productos
+    - `ProductMapper.kt` - Actualizar para no incluir reseñas del JSON directamente
+
+- [ ] **Agregar migración de base de datos para ReviewEntity**
+  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Pasos**:
+    1. Incrementar versión de base de datos (de 3 a 4, o de 4 a 5 si ya se agregó PurchaseEntity)
+    2. Crear migración correspondiente:
+       - Crear tabla `reseñas` con campos necesarios
+    3. Agregar `ReviewEntity` a la lista de entidades en `@Database`
+    4. Agregar `reviewDao(): ReviewDao` al `AppDatabase`
+    5. Agregar migración al builder con `.addMigrations(MIGRATION_X_Y)`
+  - **SQL sugerido**:
+    ```sql
+    CREATE TABLE reseñas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        productId TEXT NOT NULL,
+        userId INTEGER,
+        autor TEXT NOT NULL,
+        fecha TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        comentario TEXT NOT NULL
+    );
+    ```
+  - **Consideraciones**:
+    - `userId` es nullable (para reseñas default)
+    - No hay Foreign Key a `usuario` porque las reseñas default no tienen usuario
+    - `productId` es String (productos vienen de JSON, no de BD)
 
 #### 📋 Planificación y Documentación (IMPORTANTE - Mejora nota)
 - [ ] **Verificar y documentar Trello**
@@ -819,3 +1136,26 @@ Tareas completadas y validadas.
    - ✅ Lógica condicional completa para cargar foto desde storage
    - ✅ FloatingActionButton para seleccionar foto de galería
    - ✅ Manejo de errores completo (muestra imagen por defecto en todos los casos)
+
+6. **Checkout e Historial de Compras**: ❌ PENDIENTE
+   - ❌ `PurchaseEntity.kt` no existe (entidad para compras)
+   - ❌ `PurchaseDao.kt` no existe (DAO para operaciones de compras)
+   - ❌ Modelo de dominio `Purchase.kt` no existe
+   - ❌ `PurchaseViewModel.kt` no existe (gestión de compras)
+   - ❌ `PurchaseHistoryScreen.kt` no existe (pantalla de historial)
+   - ❌ `CartScreen.kt` no tiene botón de checkout funcional
+   - ❌ `AppDatabase.kt` no tiene tabla `compras` ni migración correspondiente
+   - ❌ No hay funcionalidad para simular compra desde el carrito
+   - ❌ No hay persistencia de historial de compras de usuarios
+
+7. **Sistema de Reseñas**: ❌ PENDIENTE
+   - ❌ `ReviewEntity.kt` no existe (entidad para reseñas en BD)
+   - ❌ `ReviewDao.kt` no existe (DAO para operaciones de reseñas)
+   - ❌ Modelo de dominio `Review.kt` no tiene campo `userId` (solo tiene autor, fecha, rating, comentario)
+   - ❌ `ReviewMapper.kt` no existe (conversiones entre Entity y Domain)
+   - ❌ `ReviewViewModel.kt` no existe (gestión de reseñas)
+   - ❌ `AppDatabase.kt` no tiene tabla `reseñas` ni migración correspondiente
+   - ❌ `AppDatabase.kt` no carga reseñas default desde JSON (solo carga usuarios default)
+   - ❌ `ProductDetailScreen.kt` solo muestra reseñas del JSON, no permite agregar nuevas
+   - ❌ No hay funcionalidad para que usuarios autenticados agreguen reseñas a productos
+   - ❌ No hay persistencia de reseñas de usuarios en base de datos

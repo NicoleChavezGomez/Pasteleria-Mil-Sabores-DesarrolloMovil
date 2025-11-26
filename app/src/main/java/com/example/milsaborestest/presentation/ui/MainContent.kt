@@ -21,16 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import android.content.Context
 import android.util.Log
-import coil.compose.AsyncImage
 import com.example.milsaborestest.presentation.viewmodel.SnackbarMessage
 import com.example.milsaborestest.R
 import com.example.milsaborestest.domain.model.User
@@ -47,7 +44,6 @@ import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.formatPrice
-import java.io.File
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -464,7 +460,6 @@ fun NavigationDrawerContent(
                 verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
             ) {
                 if (isAuthenticated && user != null) {
-                    val context = LocalContext.current
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -479,7 +474,6 @@ fun NavigationDrawerContent(
                             // Avatar con foto de perfil
                             ProfileImage(
                                 user = user,
-                                context = context,
                                 modifier = Modifier
                                     .size(64.dp)
                                     .clip(CircleShape)

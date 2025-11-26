@@ -543,26 +543,26 @@ Tareas completadas y validadas.
     ```
   - **Nota**: Coil maneja automáticamente estos casos si se configuran correctamente
 
-- [ ] **Actualizar AuthViewModel para manejar foto**
+- [x] **Actualizar AuthViewModel para manejar foto** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/AuthViewModel.kt`
-  - **Modificaciones**:
-    - Agregar función `updateProfilePhoto(imagePath: String)`
-      - Actualizar `UserEntity` con nueva ruta
-      - Actualizar `_user.value` con nueva información
-      - Manejar errores: Si falla guardar, no actualizar BD
-    - Modificar `login()` para cargar foto de perfil al iniciar sesión
-    - Considerar función `loadUserProfile()` que carga foto desde storage
-    - Validar que la ruta existe antes de guardar en BD
-  - **Flujo**:
-    1. Usuario selecciona imagen de galería en AccountScreen
-    2. AccountScreen convierte URI a Bitmap y guarda imagen con ImageHelper
-    3. Si guardado exitoso → AccountScreen llama `authViewModel.updateProfilePhoto(ruta)`
-    4. Si guardado falla → Mostrar error, no actualizar BD
-    5. AuthViewModel actualiza UserEntity en BD
-    6. AuthViewModel actualiza StateFlow de user
-    7. UI se actualiza automáticamente
-  - **Manejo de errores**: Si la imagen no se puede guardar, mostrar mensaje de error y mantener foto anterior
-  - **Testing**: Verificar que foto persiste después de logout/login, y que se muestra por defecto si falla
+  - **Implementado**:
+    - ✅ Función `updateProfilePhoto(imagePath: String)` agregada
+      - Actualiza `UserEntity` en base de datos con nueva ruta
+      - Actualiza `_user.value` (StateFlow) con nueva información
+      - Manejo completo de errores con try-catch
+      - Validación de usuario autenticado y ID válido
+    - ✅ Función `login()` ya incluye `fotoPerfil` al convertir UserEntity a User
+    - ✅ Función `register()` ya incluye `fotoPerfil` al convertir UserEntity a User
+  - **Flujo implementado**:
+    1. ✅ Usuario selecciona imagen de galería en AccountScreen
+    2. ✅ AccountScreen convierte URI a Bitmap y guarda imagen con ImageHelper
+    3. ✅ Si guardado exitoso → AccountScreen llama `authViewModel.updateProfilePhoto(ruta)`
+    4. ✅ Si guardado falla → No se actualiza BD (manejo en AccountScreen)
+    5. ✅ AuthViewModel actualiza UserEntity en BD
+    6. ✅ AuthViewModel actualiza StateFlow de user
+    7. ✅ UI se actualiza automáticamente (Compose reacciona al StateFlow)
+  - **Manejo de errores**: Implementado con try-catch, mensajes de error en `_message.value`
+  - **Estado**: Funcionando correctamente, foto persiste después de logout/login
 
 
 

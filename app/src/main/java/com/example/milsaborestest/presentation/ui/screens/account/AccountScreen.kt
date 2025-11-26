@@ -1,6 +1,5 @@
 package com.example.milsaborestest.presentation.ui.screens.account
 
-import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -120,7 +120,6 @@ fun AccountScreen(
                     ) {
                         ProfileImage(
                             user = user!!,
-                            context = context,
                             modifier = Modifier
                                 .size(100.dp)
                                 .clip(CircleShape)
@@ -240,7 +239,6 @@ fun AccountScreen(
 @Composable
 fun ProfileImage(
     user: User,
-    context: Context,
     modifier: Modifier = Modifier
 ) {
     val imagePath = user.fotoPerfil

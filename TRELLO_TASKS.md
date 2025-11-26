@@ -88,6 +88,35 @@ Tareas completadas y validadas.
     - `launchMode="singleTop"` agregado a MainActivity para manejar navegación desde notificaciones
     - Lógica de navegación mejorada en `MainContent.kt` para detectar intents de notificaciones
 
+- [x] **Sistema de galería - Foto de perfil de usuario**
+  - `ImageHelper.kt` creado e implementado (object singleton) con funciones:
+    - `uriToBitmap()` - Convierte URI de galería a Bitmap
+    - `saveProfileImage()` - Guarda imagen en storage interno (`filesDir/profile_images/`)
+    - `loadProfileImage()` - Lee imagen desde storage
+    - `deleteProfileImage()` - Elimina imagen antigua al actualizar
+  - Photo Picker implementado con `ActivityResultContracts.PickVisualMedia()`
+  - **NO requiere permisos explícitos** - El Photo Picker moderno los maneja automáticamente
+  - Imágenes por defecto creadas:
+    - `ic_profile_default.xml` - Avatar por defecto para usuarios (vector drawable)
+    - `ic_product_default.xml` - Imagen por defecto para productos (vector drawable)
+  - `AccountScreen.kt` actualizado:
+    - Componente `ProfileImage` reutilizable creado
+    - FloatingActionButton para seleccionar foto de galería
+    - Lógica condicional completa para cargar/mostrar foto de perfil
+    - Manejo de errores completo (muestra imagen por defecto en todos los casos)
+  - `MainContent.kt` (NavigationDrawerContent) actualizado:
+    - Muestra foto de perfil usando componente `ProfileImage`
+    - Avatar de 64.dp en sidebar
+  - `AuthViewModel` actualizado:
+    - Función `updateProfilePhoto(imagePath: String)` para actualizar foto en BD y StateFlow
+  - Migración de base de datos `MIGRATION_2_3` implementada (versión 2 → 3)
+  - Campo `fotoPerfil: String?` agregado a `UserEntity` y modelo de dominio `User`
+  - **Ventajas del Photo Picker**:
+    - No molesta al usuario con solicitudes de permisos
+    - Más seguro (solo accede a imagen seleccionada, no a toda la galería)
+    - Funciona automáticamente en Android 13+ sin permisos
+    - La biblioteca de compatibilidad maneja versiones anteriores
+
 ### ✅ Navegación y UI Base
 - [x] **Sistema de navegación con Compose Navigation**
   - AppNavigation configurado (renombrado desde NavGraph.kt)
@@ -309,22 +338,22 @@ Tareas completadas y validadas.
 
 ### 🚧 En Progreso - Tareas Críticas para Evaluación
 
-- [ ] **Implementar recursos nativos - Fase mínima (Notificaciones + Galería)** 🔴 CRÍTICO
+- [x] **Implementar recursos nativos - Fase mínima (Notificaciones + Galería)** ✅ COMPLETADO
   - **Contexto**: Requisito crítico del encargo - al menos 2 recursos nativos
   - **Recursos a implementar**:
     1. ✅ **Notificaciones: Recordatorio de carrito abandonado** - COMPLETADO
-    2. ⏳ **Galería: Foto de perfil de usuario (seleccionar de galería)** - EN PROGRESO
+    2. ✅ **Galería: Foto de perfil de usuario (seleccionar de galería)** - COMPLETADO
   - **Archivos principales a modificar/crear**:
     - ✅ `AndroidManifest.xml` (permisos de notificaciones) - COMPLETADO
     - ✅ `NotificationHelper.kt` (nuevo) - COMPLETADO
-    - ⏳ `ImageHelper.kt` (nuevo) - PENDIENTE
+    - ✅ `ImageHelper.kt` (nuevo) - COMPLETADO
     - ✅ `UserEntity.kt` (agregar campo fotoPerfil) - COMPLETADO
     - ✅ `AppDatabase.kt` (migración) - COMPLETADO
     - ✅ `MainActivity.kt` (lógica de notificaciones) - COMPLETADO
-    - ⏳ `AccountScreen.kt` (UI de foto de perfil) - PENDIENTE
-    - ⏳ `NavigationDrawerContent.kt` (mostrar foto) - PENDIENTE
-  - **Progreso**: 1/2 recursos nativos completados (50%)
-  - **Ver tareas detalladas en Backlog** para pasos específicos
+    - ✅ `AccountScreen.kt` (UI de foto de perfil) - COMPLETADO
+    - ✅ `MainContent.kt` (NavigationDrawerContent con foto) - COMPLETADO
+  - **Progreso**: 2/2 recursos nativos completados (100%)
+  - **Nota sobre permisos**: El Photo Picker moderno (`ActivityResultContracts.PickVisualMedia`) NO requiere permisos explícitos en Android 13+ y funciona automáticamente en versiones anteriores gracias a la biblioteca de compatibilidad.
 
 ---
 
@@ -390,21 +419,18 @@ Tareas completadas y validadas.
   - **Estado**: Funcionando correctamente
 
 #### Galería y Foto de Perfil
-- [ ] **Configurar permisos de galería en AndroidManifest**
+- [x] **Configurar permisos de galería en AndroidManifest** ✅ COMPLETADO
   - **Archivo**: `app/src/main/AndroidManifest.xml`
-  - **Permisos a agregar** dentro de `<manifest>`:
-    ```xml
-    <!-- Almacenamiento (para leer imágenes de la galería) -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" 
-                     android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    ```
+  - **Implementado**: 
+    - **NO se requieren permisos explícitos** - El Photo Picker moderno (`ActivityResultContracts.PickVisualMedia`) no los necesita
+    - Comentario agregado en AndroidManifest explicando que no se requieren permisos
   - **Notas**:
-    - `READ_EXTERNAL_STORAGE` solo para Android 12 y anteriores (API 32-)
-    - `READ_MEDIA_IMAGES` para Android 13+ (API 33+)
-    - **NO se requiere permiso de cámara** - solo lectura de medios
-    - **Ventaja**: Más simple que cámara, no requiere FileProvider
-  - **Verificar**: Permisos antes de `<application>`
+    - El Photo Picker proporciona acceso temporal y seguro a las imágenes seleccionadas
+    - No requiere `READ_EXTERNAL_STORAGE` ni `READ_MEDIA_IMAGES`
+    - Funciona automáticamente en Android 13+ sin permisos
+    - La biblioteca de compatibilidad maneja versiones anteriores automáticamente
+    - **Ventaja**: Más simple, seguro y no molesta al usuario con solicitudes de permisos
+  - **Estado**: Funcionando correctamente sin permisos explícitos
 
 - [x] **Modificar UserEntity para foto de perfil** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/data/local/database/UserEntity.kt`
@@ -423,134 +449,70 @@ Tareas completadas y validadas.
     3. `fallbackToDestructiveMigration()` mantenido para desarrollo
   - **Migración**: `ALTER TABLE usuario ADD COLUMN fotoPerfil TEXT` 
 
-- [ ] **Crear imágenes por defecto en drawable**
+- [x] **Crear imágenes por defecto en drawable** ✅ COMPLETADO
   - **Ubicación**: `app/src/main/res/drawable/`
-  - **Imágenes a crear**:
-    - `ic_profile_default.png` - Avatar por defecto para usuarios
-    - `ic_product_default.png` - Imagen por defecto para productos
-  - **Diseño**: Se agregaran unas imagenes en drawable para este fin
-  - **Uso**: Se usarán cuando no haya foto o falle la carga
+  - **Imágenes creadas**:
+    - ✅ `ic_profile_default.xml` - Avatar por defecto para usuarios (vector drawable)
+    - ✅ `ic_product_default.xml` - Imagen por defecto para productos (vector drawable)
+  - **Diseño**: Vector drawables creados con iconos de Material Design
+  - **Uso**: Se usan cuando no hay foto o falle la carga
+  - **Estado**: Implementado y funcionando en AccountScreen y NavigationDrawerContent
 
-- [ ] **Implementar ImageHelper/ImageManager**
+- [x] **Implementar ImageHelper/ImageManager** ✅ COMPLETADO
   - **Ubicación**: `app/src/main/java/com/example/milsaborestest/util/ImageHelper.kt`
-  - **Responsabilidades**:
-    - Guardar imagen seleccionada de galería en storage interno
-    - Leer imagen desde storage
-    - Convertir entre Bitmap, File, y URI
-    - Manejar errores y casos edge
-  - **Implementación**:
-    - Clase `object ImageHelper`
-    - Función `uriToBitmap(context: Context, uri: Uri): Bitmap?`
-      - Convertir URI de galería a Bitmap
-      - Usar `context.contentResolver.openInputStream(uri)`
-      - Usar `BitmapFactory.decodeStream()`
-      - Retornar Bitmap o null si falla
-      - Manejar excepciones (FileNotFoundException, IOException)
-    - Función `saveProfileImage(context: Context, bitmap: Bitmap, userId: Int): String?`
-      - Guardar en `context.filesDir` o `context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)`
-      - Nombre: "profile_${userId}.jpg"
-      - Retornar ruta del archivo guardado o null si falla
-      - Manejar excepciones (IOException, SecurityException)
-    - Función `loadProfileImage(context: Context, imagePath: String?): Bitmap?`
-      - Leer archivo desde ruta
-      - Verificar que el archivo existe antes de leer
-      - Retornar Bitmap o null si no existe o hay error
-      - Manejar excepciones (FileNotFoundException, IOException)
-    - Función `deleteProfileImage(context: Context, imagePath: String?): Boolean`
-      - Eliminar imagen antigua al actualizar
-      - Retornar true si se eliminó, false si no existía o hubo error
-  - **Storage interno vs externo**:
-    - **Interno** (`filesDir`): Privado, se elimina con la app
-    - **Externo** (`getExternalFilesDir`): Accesible por usuario, se elimina con la app
-    - Recomendación: Usar storage interno para privacidad
-  - **Manejo de errores**: Todas las funciones deben manejar excepciones y retornar null/false en caso de error
-  - **Dependencias**: `android.graphics.Bitmap`, `android.net.Uri`, `android.content.ContentResolver`, `java.io.File`
+  - **Implementado**: Clase `object ImageHelper` con todas las funciones necesarias
+  - **Funciones implementadas**:
+    - ✅ `uriToBitmap(context: Context, uri: Uri): Bitmap?` - Convierte URI de galería a Bitmap
+    - ✅ `saveProfileImage(context: Context, bitmap: Bitmap, userId: Int): String?` - Guarda imagen en storage interno
+    - ✅ `loadProfileImage(context: Context, imagePath: String?): Bitmap?` - Lee imagen desde storage
+    - ✅ `deleteProfileImage(context: Context, imagePath: String?): Boolean` - Elimina imagen antigua
+  - **Storage**: Usa storage interno (`context.filesDir/profile_images/`) para privacidad
+  - **Manejo de errores**: Todas las funciones manejan excepciones y retornan null/false en caso de error
+  - **Logging**: Implementado con `android.util.Log` para debugging
+  - **Estado**: Funcionando correctamente
 
-- [ ] **Implementar ActivityResultLauncher para galería**
+- [x] **Implementar ActivityResultLauncher para galería** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/account/AccountScreen.kt`
-  - **Implementación**:
-    - Crear `rememberLauncherForActivityResult` con `ActivityResultContracts.PickVisualMedia()`
-    - **Ventaja**: No requiere FileProvider ni archivos temporales
-    - Configurar para seleccionar solo imágenes:
-      ```kotlin
-      val pickMedia = rememberLauncherForActivityResult(
-          contract = ActivityResultContracts.PickVisualMedia()
-      ) { uri ->
-          // uri es null si el usuario canceló
-          if (uri != null) {
-              // Procesar imagen seleccionada
-          }
-      }
-      ```
-  - **Flujo**:
-    1. Usuario presiona botón "Seleccionar foto" o "Cambiar foto"
-    2. Verificar permisos (usar `rememberPermissionState` o `ActivityResultLauncher`)
-    3. Si tiene permisos → Lanzar selector de galería con `pickMedia.launch(PickVisualMediaRequest(...))`
-    4. En callback → Obtener URI → Convertir a Bitmap → Guardar con ImageHelper → Actualizar UserEntity
-  - **Manejo de permisos**:
-    - Usar `ActivityResultContracts.RequestPermission()` para Android 13+ (READ_MEDIA_IMAGES)
-    - Para Android 12 y anteriores, usar READ_EXTERNAL_STORAGE
-    - **Nota**: En Android 13+, el sistema puede manejar permisos automáticamente con PickVisualMedia
-  - **Dependencias**: `androidx.activity:activity-compose` (ya incluida)
-  - **Código de ejemplo**:
-    ```kotlin
-    // Lanzar selector de galería
-    pickMedia.launch(
-        PickVisualMediaRequest(
-            ActivityResultContracts.PickVisualMedia.ImageOnly
-        )
-    )
-    ```
+  - **Implementado**: 
+    - ✅ `rememberLauncherForActivityResult` con `ActivityResultContracts.PickVisualMedia()`
+    - ✅ Uso de `PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly).build()`
+    - ✅ Manejo seguro de resultados nullable con `let`/`run`
+  - **Flujo implementado**:
+    1. Usuario presiona FloatingActionButton para editar foto
+    2. Se lanza selector de galería automáticamente (sin verificar permisos - no se requieren)
+    3. En callback → Obtener URI → Convertir a Bitmap con ImageHelper → Guardar → Actualizar UserEntity
+    4. Eliminación automática de imagen antigua antes de guardar nueva
+  - **Manejo de permisos**: 
+    - **NO se requieren permisos explícitos** - El Photo Picker los maneja automáticamente
+    - Funciona en Android 13+ sin permisos
+    - La biblioteca de compatibilidad maneja versiones anteriores
+  - **Estado**: Funcionando correctamente
 
-- [ ] **Actualizar AccountScreen con foto de perfil y manejo de errores**
+- [x] **Actualizar AccountScreen con foto de perfil y manejo de errores** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/account/AccountScreen.kt`
-  - **Modificaciones**:
-    - Reemplazar `Image(painterResource(R.drawable.logo_milsabores))` con lógica condicional
-    - **Lógica condicional para foto de perfil**:
-      1. Si `user.fotoPerfil != null` → Intentar cargar desde storage
-      2. Si carga exitosa → Mostrar imagen con Coil o ImageHelper
-      3. Si falla carga (archivo no existe, error) → Mostrar imagen por defecto `R.drawable.ic_profile_default`
-      4. Si `user.fotoPerfil == null` → Mostrar imagen por defecto `R.drawable.ic_profile_default`
-    - Usar `AsyncImage` de Coil con `placeholder` y `error`:
-      ```kotlin
-      AsyncImage(
-          model = File(user.fotoPerfil),
-          contentDescription = "Foto de perfil",
-          placeholder = painterResource(R.drawable.ic_profile_default),
-          error = painterResource(R.drawable.ic_profile_default),
-          fallback = painterResource(R.drawable.ic_profile_default)
-      )
-      ```
-    - Agregar botón "Editar foto" o hacer el avatar clickeable
-    - Al hacer click → Lanzar ActivityResultLauncher de galería
-  - **UI**:
-    - Avatar circular de 100.dp
-    - Botón flotante pequeño para editar (opcional)
-    - Mostrar loading mientras se procesa imagen (placeholder)
-  - **Estado**:
-    - Manejar estados: Loading, Success, Error
-    - En caso de error, siempre mostrar imagen por defecto
-  - **Casos a manejar**:
-    - `fotoPerfil == null` → Imagen por defecto
-    - `fotoPerfil != null` pero archivo no existe → Imagen por defecto
-    - Error al leer archivo → Imagen por defecto
-    - Timeout de carga → Imagen por defecto
+  - **Implementado**:
+    - ✅ Componente `ProfileImage` creado con lógica condicional completa
+    - ✅ Uso de `AsyncImage` de Coil con `placeholder`, `error` y `fallback` apuntando a `ic_profile_default`
+    - ✅ Verificación de existencia de archivo antes de cargar
+    - ✅ FloatingActionButton para editar foto (32.dp, alineado BottomEnd)
+    - ✅ Avatar circular de 100.dp con `CircleShape`
+  - **Lógica condicional implementada**:
+    1. Si `user.fotoPerfil != null` y archivo existe → Cargar con AsyncImage
+    2. Si archivo no existe o error → Mostrar `ic_profile_default`
+    3. Si `user.fotoPerfil == null` → Mostrar `ic_profile_default`
+  - **Casos manejados**: Todos los casos edge cubiertos (null, archivo no existe, error de lectura)
+  - **Estado**: Funcionando correctamente
 
-- [ ] **Actualizar Sidebar con foto de perfil y manejo de errores**
+- [x] **Actualizar Sidebar con foto de perfil y manejo de errores** ✅ COMPLETADO
   - **Archivo**: `app/src/main/java/com/example/milsaborestest/presentation/ui/MainContent.kt`
   - **Función**: `NavigationDrawerContent`
-  - **Modificaciones**:
-    - En la sección de información de usuario (cuando `isAuthenticated && user != null`)
-    - Reemplazar o agregar avatar con foto de perfil
-    - **Misma lógica condicional que AccountScreen**:
-      - Si hay foto y carga exitosa → Mostrar foto
-      - Si no hay foto o falla carga → Mostrar `R.drawable.ic_profile_default`
-    - Tamaño sugerido: 64.dp (más pequeño que en AccountScreen)
-  - **Implementación**:
-    - Pasar `user?.fotoPerfil` como parámetro
-    - Usar `AsyncImage` de Coil con `placeholder` y `error` apuntando a imagen por defecto
-    - Mostrar en `Row` o `Column` junto con nombre y email
-  - **Casos a manejar**: Igual que AccountScreen (null, archivo no existe, error de lectura)
+  - **Implementado**:
+    - ✅ Uso del componente `ProfileImage` reutilizable
+    - ✅ Avatar de 64.dp (más pequeño que en AccountScreen)
+    - ✅ Mostrado en `Row` junto con nombre y email del usuario
+    - ✅ Misma lógica condicional que AccountScreen (usa el mismo componente)
+  - **Casos manejados**: Todos los casos edge cubiertos (null, archivo no existe, error de lectura)
+  - **Estado**: Funcionando correctamente
 
 - [ ] **Actualizar componentes de productos con imágenes por defecto**
   - **Archivos a modificar**:
@@ -713,10 +675,22 @@ Tareas completadas y validadas.
 
 ---
 
-**Última actualización**: 25-11-2025  
-**Próxima revisión**: Al completar recursos nativos (galería)
+**Última actualización**: 26-11-2025  
+**Próxima revisión**: Al completar mejoras pendientes (imágenes por defecto en productos, etc.)
 
 ### 🎉 Actualizaciones Recientes
+
+**26-11-2025 - Sistema de Galería y Foto de Perfil Completado**
+- ✅ Implementado `ImageHelper.kt` con funciones completas (uriToBitmap, saveProfileImage, loadProfileImage, deleteProfileImage)
+- ✅ Photo Picker implementado con `ActivityResultContracts.PickVisualMedia()` (NO requiere permisos explícitos)
+- ✅ Imágenes por defecto creadas (`ic_profile_default.xml`, `ic_product_default.xml`)
+- ✅ `AccountScreen.kt` actualizado con selector de galería y componente `ProfileImage` reutilizable
+- ✅ `MainContent.kt` (NavigationDrawerContent) actualizado para mostrar foto de perfil
+- ✅ `AuthViewModel` con función `updateProfilePhoto()` para actualizar foto en BD
+- ✅ Migración de BD `MIGRATION_2_3` implementada (versión 2 → 3)
+- ✅ Manejo completo de errores (muestra imagen por defecto en todos los casos)
+- ✅ Correcciones aplicadas: Imports, parámetros no utilizados, uso correcto de Photo Picker
+- 📝 Commits: "[ FEAT ]: Implementar sistema de foto de perfil con galería", "[ FIX ]: Corregir errores en AccountScreen y MainContent"
 
 **25-11-2025 - Splash Screen y Mejoras de Notificaciones**
 - ✅ Implementada pantalla de Splash con logo de Mil Sabores
@@ -805,19 +779,23 @@ Tareas completadas y validadas.
      - `launchMode="singleTop"` en MainActivity
      - Navegación mejorada desde notificaciones en `MainContent.kt`
 
-3. **Recursos Nativos - Galería**: ⚠️ Parcialmente implementado
+3. **Recursos Nativos - Galería**: ✅ COMPLETADO
    - ✅ `UserEntity.kt` tiene campo `fotoPerfil` (completado)
-   - ✅ Migración de BD implementada (completado)
-   - ❌ No existe `ImageHelper.kt`
-   - ❌ No hay permisos de galería en `AndroidManifest.xml`
-   - ❌ `AccountScreen.kt` no tiene selector de galería
-   - ❌ No hay imágenes por defecto (`ic_profile_default`, `ic_product_default`)
+   - ✅ Migración de BD implementada (MIGRATION_2_3, versión 2 → 3)
+   - ✅ `ImageHelper.kt` creado e implementado con todas las funciones necesarias
+   - ✅ Photo Picker implementado (NO requiere permisos explícitos - comportamiento correcto)
+   - ✅ `AccountScreen.kt` tiene selector de galería y muestra foto de perfil
+   - ✅ `MainContent.kt` (NavigationDrawerContent) muestra foto de perfil
+   - ✅ Imágenes por defecto creadas (`ic_profile_default.xml`, `ic_product_default.xml`)
+   - ✅ `AuthViewModel` tiene función `updateProfilePhoto()` para actualizar foto
+   - ✅ Componente `ProfileImage` reutilizable creado
 
-4. **Imágenes por defecto en productos**: ❌ No implementado
-   - `ProductCard.kt` no tiene `placeholder`, `error`, ni `fallback` en `AsyncImage`
-   - No existen drawables `ic_product_default` ni `ic_profile_default`
+4. **Imágenes por defecto en productos**: ⚠️ Parcialmente implementado
+   - ✅ Drawables `ic_product_default` y `ic_profile_default` creados
+   - ❌ `ProductCard.kt` no tiene `placeholder`, `error`, ni `fallback` en `AsyncImage` (tarea independiente, no crítica)
 
-5. **Foto de perfil en AccountScreen**: ❌ No implementado
-   - `AccountScreen.kt` muestra `logo_milsabores` en lugar de foto de perfil
-   - No hay lógica condicional para cargar foto desde storage
-   - No hay botón para seleccionar foto de galería
+5. **Foto de perfil en AccountScreen**: ✅ COMPLETADO
+   - ✅ `AccountScreen.kt` muestra foto de perfil con componente `ProfileImage`
+   - ✅ Lógica condicional completa para cargar foto desde storage
+   - ✅ FloatingActionButton para seleccionar foto de galería
+   - ✅ Manejo de errores completo (muestra imagen por defecto en todos los casos)

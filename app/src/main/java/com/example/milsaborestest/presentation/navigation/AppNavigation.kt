@@ -13,6 +13,7 @@ import com.example.milsaborestest.presentation.ui.screens.login.LoginScreen
 import com.example.milsaborestest.presentation.ui.screens.productdetail.ProductDetailScreen
 import com.example.milsaborestest.presentation.ui.screens.products.AllProductsScreen
 import com.example.milsaborestest.presentation.ui.screens.register.RegisterScreen
+import com.example.milsaborestest.presentation.ui.screens.splash.SplashScreen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 
 @Composable
@@ -22,8 +23,15 @@ fun AppNavigation(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Splash.route
     ) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
+        }
+
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)
         }

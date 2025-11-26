@@ -118,7 +118,7 @@ fun MainContent(
     }
     
     val showBottomBar = when(currentRoute) {
-        Screen.Login.route, Screen.Register.route -> false
+        Screen.Login.route, Screen.Register.route, Screen.Splash.route -> false
         else -> true
     }
     

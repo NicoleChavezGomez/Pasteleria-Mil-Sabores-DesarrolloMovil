@@ -1,11 +1,13 @@
 package com.example.milsaborestest.data.local.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,15 +17,17 @@ import kotlinx.coroutines.launch
         CartEntity::class,
         UserEntity::class,
         PurchaseEntity::class,
-        PurchaseItemEntity::class
+        PurchaseItemEntity::class,
+        ReviewEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun cartDao(): CartDao
     abstract fun userDao(): UserDao
     abstract fun purchaseDao(): PurchaseDao
+    abstract fun reviewDao(): ReviewDao
     
     companion object {
         @Volatile
@@ -67,6 +71,28 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         
+        // Migración de versión 4 a 5: Crear tabla de reseñas
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS reseñas (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        productId TEXT NOT NULL,
+                        userId INTEGER,
+                        autor TEXT NOT NULL,
+                        fecha TEXT NOT NULL,
+                        rating INTEGER NOT NULL,
+                        comentario TEXT NOT NULL,
+                        FOREIGN KEY(userId) REFERENCES usuario(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_reseñas_productId ON reseñas(productId)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_reseñas_userId ON reseñas(userId)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             if (INSTANCE == null) {
                 synchronized(this) {
@@ -76,7 +102,7 @@ abstract class AppDatabase : RoomDatabase() {
                             AppDatabase::class.java,
                             "milsabores_database"
                         )
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                         .fallbackToDestructiveMigration() // Para desarrollo, permite recrear DB en cambios de versión
                         .build()
                         
@@ -84,7 +110,7 @@ abstract class AppDatabase : RoomDatabase() {
                         
                         // Insertar datos por defecto después de construir la base de datos
                         CoroutineScope(Dispatchers.IO).launch {
-                            insertarDatosPorDefecto(database)
+                            insertarDatosPorDefecto(context.applicationContext, database)
                         }
                     }
                 }
@@ -92,15 +118,17 @@ abstract class AppDatabase : RoomDatabase() {
             return INSTANCE!!
         }
         
-        private suspend fun insertarDatosPorDefecto(db: AppDatabase) {
-            val userDao = db.userDao()
-            
-            // Verificar si ya existen usuarios para no duplicar
+        private suspend fun insertarDatosPorDefecto(context: Context, db: AppDatabase) {
+            insertarUsuariosPorDefecto(db.userDao())
+            insertarReseñasPorDefecto(context, db.reviewDao())
+        }
+
+        private suspend fun insertarUsuariosPorDefecto(userDao: UserDao) {
             val usuariosExistentes = userDao.obtenerTodos()
             if (usuariosExistentes.isNotEmpty()) {
-                return // Ya hay usuarios, no insertar de nuevo
+                return
             }
-            
+
             val usuarios = listOf(
                 UserEntity(
                     nombre = "Admin Mil Sabores",
@@ -118,8 +146,43 @@ abstract class AppDatabase : RoomDatabase() {
                     contrasena = "123456"
                 )
             )
-            
+
             usuarios.forEach { userDao.insertar(it) }
+        }
+
+        private suspend fun insertarReseñasPorDefecto(
+            context: Context,
+            reviewDao: ReviewDao
+        ) {
+            val totalReseñas = reviewDao.contarReseñas()
+            if (totalReseñas > 0) {
+                return
+            }
+
+            try {
+                val dataSource = ProductJsonDataSource(context)
+                val productos = dataSource.getProductosData().getOrNull() ?: return
+                val reseñas = productos.categorias.values.flatMap { category ->
+                    category.productos.flatMap { product ->
+                        product.reseñas.map { reviewDto ->
+                            ReviewEntity(
+                                productId = product.id,
+                                userId = null,
+                                autor = reviewDto.autor,
+                                fecha = reviewDto.fecha,
+                                rating = reviewDto.rating,
+                                comentario = reviewDto.comentario
+                            )
+                        }
+                    }
+                }
+
+                if (reseñas.isNotEmpty()) {
+                    reviewDao.insertarTodas(reseñas)
+                }
+            } catch (e: Exception) {
+                Log.e("AppDatabase", "Error insertando reseñas por defecto", e)
+            }
         }
     }
 }

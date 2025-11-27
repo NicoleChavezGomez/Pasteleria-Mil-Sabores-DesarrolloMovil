@@ -1332,14 +1332,14 @@ Tareas completadas y validadas.
    - ✅ Persistencia de historial de compras por usuario implementada
    - ✅ Navegación integrada en `AppNavigation.kt` y `MainContent.kt` (Drawer)
 
-8. **Sistema de Reseñas**: ❌ PENDIENTE
-   - ❌ `ReviewEntity.kt` no existe (entidad para reseñas en BD)
-   - ❌ `ReviewDao.kt` no existe (DAO para operaciones de reseñas)
-   - ❌ Modelo de dominio `Review.kt` no tiene campo `userId` (solo tiene autor, fecha, rating, comentario)
-   - ❌ `ReviewMapper.kt` no existe (conversiones entre Entity y Domain)
-   - ❌ `ReviewViewModel.kt` no existe (gestión de reseñas)
-   - ❌ `AppDatabase.kt` no tiene tabla `reseñas` ni migración correspondiente
-   - ❌ `AppDatabase.kt` no carga reseñas default desde JSON (solo carga usuarios default)
-   - ❌ `ProductDetailScreen.kt` solo muestra reseñas del JSON, no permite agregar nuevas
-   - ❌ No hay funcionalidad para que usuarios autenticados agreguen reseñas a productos
-   - ❌ No hay persistencia de reseñas de usuarios en base de datos
+8. **Sistema de Reseñas**: ✅ COMPLETADO
+   - ✅ `ReviewEntity.kt` definida con índices y FK a usuarios (tabla `reseñas`)
+   - ✅ `ReviewDao.kt` creado con inserciones masivas, conteos y queries por producto/usuario
+   - ✅ Modelo `Review.kt` ahora incluye `id` y `userId` para identificar al autor
+   - ✅ `ReviewMapper.kt` agrega conversiones entre DTO ↔ Entity ↔ Domain
+   - ✅ `ReviewViewModel.kt` gestiona carga, validaciones y envío de reseñas con `StateFlow`
+   - ✅ `AppDatabase.kt` versión 5 con `ReviewEntity`, `reviewDao()` y migración `MIGRATION_4_5`
+   - ✅ Carga inicial de reseñas desde `productos.json` en `insertarDatosPorDefecto`
+   - ✅ `ProductDetailScreen.kt` consume `ReviewViewModel`, muestra reseñas de Room y formulario
+   - ✅ Usuarios autenticados pueden agregar una reseña por producto (validaciones y feedback)
+   - ✅ Reseñas se persisten en Room y actualizan rating/cantidad en tiempo real

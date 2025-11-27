@@ -98,7 +98,8 @@ fun AppNavigation(
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             ProductDetailScreen(
                 navController = navController,
-                productId = productId
+                productId = productId,
+                authViewModel = authViewModel
             )
         }
         

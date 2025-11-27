@@ -160,9 +160,9 @@ fun CartItemRow(
             AsyncImage(
                 model = cartItem.imagen,
                 contentDescription = cartItem.nombre,
-                placeholder = painterResource(R.drawable.ic_product_default),
-                error = painterResource(R.drawable.ic_product_default),
-                fallback = painterResource(R.drawable.ic_product_default),
+                placeholder = painterResource(R.drawable.producto_default),
+                error = painterResource(R.drawable.producto_default),
+                fallback = painterResource(R.drawable.producto_default),
                 modifier = Modifier
                     .size(80.dp)
                     .clip(MaterialTheme.shapes.small),

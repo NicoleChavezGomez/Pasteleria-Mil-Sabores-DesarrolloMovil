@@ -91,9 +91,9 @@ fun ProductDetailScreen(
                     AsyncImage(
                         model = product.imagen,
                         contentDescription = product.nombre,
-                        placeholder = painterResource(R.drawable.ic_product_default),
-                        error = painterResource(R.drawable.ic_product_default),
-                        fallback = painterResource(R.drawable.ic_product_default),
+                        placeholder = painterResource(R.drawable.producto_default),
+                        error = painterResource(R.drawable.producto_default),
+                        fallback = painterResource(R.drawable.producto_default),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(300.dp)

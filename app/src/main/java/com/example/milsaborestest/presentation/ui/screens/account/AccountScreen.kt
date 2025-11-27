@@ -250,15 +250,15 @@ fun ProfileImage(
             AsyncImage(
                 model = imageFile,
                 contentDescription = "Foto de perfil",
-                placeholder = painterResource(R.drawable.ic_profile_default),
-                error = painterResource(R.drawable.ic_profile_default),
-                fallback = painterResource(R.drawable.ic_profile_default),
+                placeholder = painterResource(R.drawable.user_default),
+                error = painterResource(R.drawable.user_default),
+                fallback = painterResource(R.drawable.user_default),
                 modifier = modifier
             )
         } else {
             // Archivo no existe, mostrar imagen por defecto
             Image(
-                painter = painterResource(R.drawable.ic_profile_default),
+                painter = painterResource(R.drawable.user_default),
                 contentDescription = "Foto de perfil por defecto",
                 modifier = modifier
             )
@@ -266,7 +266,7 @@ fun ProfileImage(
     } else {
         // No hay foto, mostrar imagen por defecto
         Image(
-            painter = painterResource(R.drawable.ic_profile_default),
+            painter = painterResource(R.drawable.user_default),
             contentDescription = "Foto de perfil por defecto",
             modifier = modifier
         )

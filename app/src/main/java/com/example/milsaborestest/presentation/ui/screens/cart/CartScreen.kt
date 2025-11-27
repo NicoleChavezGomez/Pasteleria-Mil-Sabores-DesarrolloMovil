@@ -5,132 +5,233 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.R
 import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
+import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
+import com.example.milsaborestest.presentation.viewmodel.PurchaseViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.formatPrice
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen(navController: NavHostController) {
+fun CartScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    purchaseViewModel: PurchaseViewModel
+) {
     val viewModel: CartViewModel = viewModel()
     val cartItems by viewModel.cartItems.collectAsState()
     val totalItems by viewModel.totalItems.collectAsState()
     val totalPrice by viewModel.totalPrice.collectAsState()
+    val user by authViewModel.user.collectAsState()
+    val isLoading by purchaseViewModel.isLoading.collectAsState()
     
-    Column(modifier = Modifier.fillMaxSize()) {
-        // TopBar
-        Surface(
-            color = CardWhite,
-            shadowElevation = Design.CARD_ELEVATION
-        ) {
-            TopAppBar(
-                title = { Text("Carrito") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CardWhite,
-                    titleContentColor = TextDark
-                )
-            )
-        }
-        
-        // Contenido
-        if (cartItems.isEmpty()) {
-            EmptyCart(modifier = Modifier.weight(1f))
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Función de checkout
+    val onCheckout: () -> Unit = {
+        if (user == null) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Debes iniciar sesión para realizar una compra")
+            }
+        } else if (cartItems.isEmpty()) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("El carrito está vacío")
+            }
         } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(Design.PADDING_STANDARD),
-                verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
-            ) {
-                items(cartItems) { item ->
-                    CartItemRow(
-                        cartItem = item,
-                        onIncreaseQuantity = {
-                            viewModel.updateQuantity(item.id, item.cantidad + 1)
-                        },
-                        onDecreaseQuantity = {
-                            if (item.cantidad > 1) {
-                                viewModel.updateQuantity(item.id, item.cantidad - 1)
-                            } else {
-                                viewModel.removeFromCart(item.id)
-                            }
-                        },
-                        onRemoveItem = {
-                            viewModel.removeFromCart(item.id)
-                        }
-                    )
+            coroutineScope.launch {
+                val purchaseId = purchaseViewModel.realizarCompra(cartItems, user!!.id)
+                if (purchaseId != null) {
+                    // Compra exitosa
+                    viewModel.clearCart()
+                    showSuccessDialog = true
+                } else {
+                    snackbarHostState.showSnackbar("Error al realizar la compra")
                 }
             }
-            
-            // Bottom bar fijo
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 8.dp,
-                color = CardWhite
-            ) {
-                Column(
-                    modifier = Modifier.padding(Design.PADDING_STANDARD),
-                    verticalArrangement = Arrangement.spacedBy(Design.PADDING_MEDIUM)
+        }
+    }
+    
+    // Diálogo de éxito
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "¡Compra Exitosa!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Tu pedido ha sido procesado correctamente. Puedes ver los detalles en tu historial de compras.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.navigate("purchase_history") {
+                            popUpTo("cart") { inclusive = true }
+                        }
+                    }
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Total:",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = totalPrice.formatPrice(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
+                    Text("Ver Historial")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Volver al Inicio")
+                }
+            }
+        )
+    }
+    
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize()) {
+            // TopBar
+            Surface(
+                color = CardWhite,
+                shadowElevation = Design.CARD_ELEVATION
+            ) {
+                TopAppBar(
+                    title = { Text("Carrito") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = CardWhite,
+                        titleContentColor = TextDark
+                    )
+                )
+            }
+            
+            // Contenido
+            if (cartItems.isEmpty()) {
+                EmptyCart(modifier = Modifier.weight(1f))
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(Design.PADDING_STANDARD),
+                    verticalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                ) {
+                    items(cartItems) { item ->
+                        CartItemRow(
+                            cartItem = item,
+                            onIncreaseQuantity = {
+                                viewModel.updateQuantity(item.id, item.cantidad + 1)
+                            },
+                            onDecreaseQuantity = {
+                                if (item.cantidad > 1) {
+                                    viewModel.updateQuantity(item.id, item.cantidad - 1)
+                                } else {
+                                    viewModel.removeFromCart(item.id)
+                                }
+                            },
+                            onRemoveItem = {
+                                viewModel.removeFromCart(item.id)
+                            }
                         )
                     }
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                }
+                
+                // Bottom bar fijo
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    tonalElevation = 8.dp,
+                    color = CardWhite
+                ) {
+                    Column(
+                        modifier = Modifier.padding(Design.PADDING_STANDARD),
+                        verticalArrangement = Arrangement.spacedBy(Design.PADDING_MEDIUM)
                     ) {
-                        OutlinedButton(
-                            onClick = { viewModel.clearCart() },
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Vaciar Carrito")
+                            Text(
+                                text = "Total:",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = totalPrice.formatPrice(),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         
-                        Button(
-                            onClick = { /* TODO: Implementar checkout */ },
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
                         ) {
-                            Text("Comprar")
+                            OutlinedButton(
+                                onClick = { viewModel.clearCart() },
+                                modifier = Modifier.weight(1f),
+                                enabled = !isLoading
+                            ) {
+                                Text("Vaciar Carrito")
+                            }
+                            
+                            Button(
+                                onClick = onCheckout,
+                                modifier = Modifier.weight(1f),
+                                enabled = !isLoading && cartItems.isNotEmpty()
+                            ) {
+                                if (isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text(if (user != null) "Comprar" else "Iniciar Sesión")
+                                }
+                            }
                         }
                     }
                 }

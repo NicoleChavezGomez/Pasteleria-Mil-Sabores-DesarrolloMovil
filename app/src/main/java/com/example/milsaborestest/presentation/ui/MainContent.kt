@@ -37,6 +37,7 @@ import com.example.milsaborestest.presentation.ui.components.BottomNavBar
 import com.example.milsaborestest.presentation.ui.screens.account.ProfileImage
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
+import com.example.milsaborestest.presentation.viewmodel.PurchaseViewModel
 import com.example.milsaborestest.ui.theme.BackgroundPink
 import com.example.milsaborestest.ui.theme.BrandPink
 import com.example.milsaborestest.ui.theme.CardWhite
@@ -55,6 +56,7 @@ fun MainContent(
 ) {
     val cartViewModel: CartViewModel = viewModel()
     val authViewModel: AuthViewModel = viewModel()
+    val purchaseViewModel: PurchaseViewModel = viewModel()
     val totalItems by cartViewModel.totalItems.collectAsState()
     val totalPrice by cartViewModel.totalPrice.collectAsState()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
@@ -160,6 +162,10 @@ fun MainContent(
                         coroutineScope.launch { drawerState.close() }
                         navController.navigate(Screen.Account.route)
                     },
+                    onNavigateToPurchaseHistory = {
+                        coroutineScope.launch { drawerState.close() }
+                        navController.navigate(Screen.PurchaseHistory.route)
+                    },
                     onLogout = {
                         coroutineScope.launch { drawerState.close() }
                         authViewModel.logout()
@@ -199,9 +205,10 @@ fun MainContent(
             ) { paddingValues ->
                 Box(modifier = Modifier.padding(paddingValues)) {
                     AppNavigation(
-                    navController = navController,
-                        authViewModel = authViewModel
-                )
+                        navController = navController,
+                        authViewModel = authViewModel,
+                        purchaseViewModel = purchaseViewModel
+                    )
                 }
             }
         }
@@ -314,6 +321,7 @@ fun NavigationDrawerContent(
     onNavigateToProducts: () -> Unit,
     onNavigateToCart: () -> Unit,
     onNavigateToAccount: () -> Unit,
+    onNavigateToPurchaseHistory: () -> Unit,
     onLogout: () -> Unit,
     onCloseDrawer: () -> Unit
 ) {
@@ -450,6 +458,16 @@ fun NavigationDrawerContent(
                     selected = false,
                     onClick = onNavigateToAccount
                 )
+                
+                // Historial de compras (solo si está autenticado)
+                if (isAuthenticated) {
+                    NavigationDrawerItem(
+                        icon = { Icon(Icons.Filled.History, contentDescription = "Historial") },
+                        label = { Text("Historial de Compras") },
+                        selected = false,
+                        onClick = onNavigateToPurchaseHistory
+                    )
+                }
             }
             
             // Botones de autenticación

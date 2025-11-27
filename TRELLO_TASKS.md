@@ -1320,16 +1320,17 @@ Tareas completadas y validadas.
    - ⚠️ **Estado actual**: Productos se cargan completamente desde JSON (`productos.json` en assets)
    - ⚠️ **Objetivo**: Migrar a Room Database usando misma metodología que usuarios por defecto
 
-7. **Checkout e Historial de Compras**: ❌ PENDIENTE
-   - ❌ `PurchaseEntity.kt` no existe (entidad para compras)
-   - ❌ `PurchaseDao.kt` no existe (DAO para operaciones de compras)
-   - ❌ Modelo de dominio `Purchase.kt` no existe
-   - ❌ `PurchaseViewModel.kt` no existe (gestión de compras)
-   - ❌ `PurchaseHistoryScreen.kt` no existe (pantalla de historial)
-   - ❌ `CartScreen.kt` no tiene botón de checkout funcional
-   - ❌ `AppDatabase.kt` no tiene tabla `compras` ni migración correspondiente
-   - ❌ No hay funcionalidad para simular compra desde el carrito
-   - ❌ No hay persistencia de historial de compras de usuarios
+7. **Checkout e Historial de Compras**: ✅ COMPLETADO
+   - ✅ `PurchaseEntity.kt` y `PurchaseItemEntity.kt` creados e implementados
+   - ✅ `PurchaseDao.kt` creado con todas las queries necesarias
+   - ✅ Modelos de dominio `Purchase.kt` y `PurchaseItem.kt` creados
+   - ✅ `PurchaseViewModel.kt` implementado con lógica de checkout y gestión de historial
+   - ✅ `PurchaseHistoryScreen.kt` creada con UI completa y animaciones
+   - ✅ `CartScreen.kt` actualizado con botón de checkout funcional y validaciones
+   - ✅ `AppDatabase.kt` actualizado con nuevas tablas y migración `MIGRATION_3_4`
+   - ✅ Funcionalidad de checkout simula compra, guarda en BD y limpia carrito
+   - ✅ Persistencia de historial de compras por usuario implementada
+   - ✅ Navegación integrada en `AppNavigation.kt` y `MainContent.kt` (Drawer)
 
 8. **Sistema de Reseñas**: ❌ PENDIENTE
    - ❌ `ReviewEntity.kt` no existe (entidad para reseñas en BD)

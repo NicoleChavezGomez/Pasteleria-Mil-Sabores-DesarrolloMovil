@@ -62,6 +62,12 @@ fun MainContent(
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
     val user by authViewModel.user.collectAsState()
     
+    // Actualizar userId en CartViewModel cuando el usuario cambie
+    LaunchedEffect(user) {
+        val userId = user?.id?.toIntOrNull()
+        cartViewModel.setUserId(userId)
+    }
+    
     // Debug: Log del estado de autenticación
     Log.d(Constants.TAG, "MainContent - isAuthenticated: $isAuthenticated, user: ${user?.name}")
     // Sin protección de rutas - como PokeStore, puedes navegar sin autenticación

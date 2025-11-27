@@ -80,6 +80,15 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     fun logout() {
         viewModelScope.launch {
             try {
+                val currentUser = _user.value
+                val userId = currentUser?.id?.toIntOrNull()
+                
+                // Limpiar carrito del usuario antes de cerrar sesión
+                if (userId != null) {
+                    val cartDao = database.cartDao()
+                    cartDao.clearCart(userId)
+                }
+                
                 _user.value = null
                 _isAuthenticated.value = false
                 _message.value = "Sesión cerrada"

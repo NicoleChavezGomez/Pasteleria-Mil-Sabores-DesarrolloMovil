@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 data class SnackbarMessage(
@@ -35,26 +36,49 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     private val productDataSource = ProductJsonDataSource(application)
     private val productRepository: ProductRepository = ProductRepositoryImpl(productDataSource)
     
-    val cartItems: StateFlow<List<CartItem>> = cartRepository.getAllCartItems()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    // Necesitamos AuthViewModel para obtener userId
+    // Por ahora usamos un StateFlow para userId que se actualizará desde fuera
+    private val _currentUserId = MutableStateFlow<Int?>(null)
     
-    val totalItems: StateFlow<Int> = cartRepository.getCartItemCount()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
+    val cartItems: StateFlow<List<CartItem>> = _currentUserId.flatMapLatest { userId ->
+        if (userId != null) {
+            cartRepository.getAllCartItems(userId)
+        } else {
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
     
-    val totalPrice: StateFlow<Int> = cartRepository.getCartTotalPrice()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
+    val totalItems: StateFlow<Int> = _currentUserId.flatMapLatest { userId ->
+        if (userId != null) {
+            cartRepository.getCartItemCount(userId)
+        } else {
+            kotlinx.coroutines.flow.flowOf(0)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+    
+    val totalPrice: StateFlow<Int> = _currentUserId.flatMapLatest { userId ->
+        if (userId != null) {
+            cartRepository.getCartTotalPrice(userId)
+        } else {
+            kotlinx.coroutines.flow.flowOf(0)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0
+    )
+    
+    fun setUserId(userId: Int?) {
+        _currentUserId.value = userId
+    }
     
     private val _snackbarMessage = MutableStateFlow<SnackbarMessage?>(null)
     val snackbarMessage: StateFlow<SnackbarMessage?> = _snackbarMessage.asStateFlow()
@@ -64,7 +88,13 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     fun addToCart(productId: String, quantity: Int = 1) {
         viewModelScope.launch {
             try {
-                Log.d(Constants.TAG, "addToCart llamado: productId=$productId, quantity=$quantity")
+                val userId = _currentUserId.value
+                if (userId == null) {
+                    _snackbarMessage.value = SnackbarMessage("Debes iniciar sesión para agregar productos al carrito")
+                    return@launch
+                }
+                
+                Log.d(Constants.TAG, "addToCart llamado: productId=$productId, quantity=$quantity, userId=$userId")
                 val product = productRepository.getProductById(productId)
                 if (product != null) {
                     val cartItem = CartItem(
@@ -75,7 +105,7 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
                         imagen = product.imagen,
                         descripcion = product.descripcion
                     )
-                    cartRepository.addToCart(cartItem)
+                    cartRepository.addToCart(cartItem, userId)
                     _lastAddedProduct.value = cartItem
                     
                     // Mostrar Snackbar con acción de deshacer
@@ -99,8 +129,11 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     
     private suspend fun undoAddToCart() {
         try {
+            val userId = _currentUserId.value
+            if (userId == null) return
+            
             _lastAddedProduct.value?.let { cartItem ->
-                cartRepository.removeFromCart(cartItem.id)
+                cartRepository.removeFromCart(cartItem.id, userId)
                 _snackbarMessage.value = SnackbarMessage("Producto eliminado del carrito")
             }
         } catch (e: Exception) {
@@ -111,9 +144,12 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     fun updateQuantity(productId: String, newQuantity: Int) {
         viewModelScope.launch {
             try {
-                val cartItem = cartRepository.getCartItemById(productId)
+                val userId = _currentUserId.value
+                if (userId == null) return@launch
+                
+                val cartItem = cartRepository.getCartItemById(productId, userId)
                 if (cartItem != null) {
-                    cartRepository.updateCartItem(cartItem.copy(cantidad = newQuantity.coerceIn(1, 99)))
+                    cartRepository.updateCartItem(cartItem.copy(cantidad = newQuantity.coerceIn(1, 99)), userId)
                     _snackbarMessage.value = SnackbarMessage("Cantidad actualizada")
                 }
             } catch (e: Exception) {
@@ -125,7 +161,10 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     fun removeFromCart(productId: String) {
         viewModelScope.launch {
             try {
-                cartRepository.removeFromCart(productId)
+                val userId = _currentUserId.value
+                if (userId == null) return@launch
+                
+                cartRepository.removeFromCart(productId, userId)
                 _snackbarMessage.value = SnackbarMessage("Producto eliminado del carrito")
             } catch (e: Exception) {
                 _snackbarMessage.value = SnackbarMessage("Error al eliminar producto: ${e.message}")
@@ -136,12 +175,25 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     fun clearCart() {
         viewModelScope.launch {
             try {
-                cartRepository.clearCart()
+                val userId = _currentUserId.value
+                if (userId == null) return@launch
+                
+                cartRepository.clearCart(userId)
                 _snackbarMessage.value = SnackbarMessage("Carrito vaciado")
                 // Cancelar notificación si existe
                 com.example.milsaborestest.util.NotificationHelper.cancelCartReminderNotification(getApplication())
             } catch (e: Exception) {
                 _snackbarMessage.value = SnackbarMessage("Error al vaciar carrito: ${e.message}")
+            }
+        }
+    }
+    
+    fun clearCart(userId: Int) {
+        viewModelScope.launch {
+            try {
+                cartRepository.clearCart(userId)
+            } catch (e: Exception) {
+                Log.e(Constants.TAG, "Error al limpiar carrito", e)
             }
         }
     }

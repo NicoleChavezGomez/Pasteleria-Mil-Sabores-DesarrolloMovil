@@ -22,7 +22,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.R
-import com.example.milsaborestest.presentation.ui.components.LoadingIndicator
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 import com.example.milsaborestest.presentation.viewmodel.PurchaseViewModel
@@ -41,7 +40,6 @@ fun CartScreen(
 ) {
     val viewModel: CartViewModel = viewModel()
     val cartItems by viewModel.cartItems.collectAsState()
-    val totalItems by viewModel.totalItems.collectAsState()
     val totalPrice by viewModel.totalPrice.collectAsState()
     val user by authViewModel.user.collectAsState()
     val isLoading by purchaseViewModel.isLoading.collectAsState()
@@ -50,11 +48,11 @@ fun CartScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // Función de checkout
+    // Funcion de checkout
     val onCheckout: () -> Unit = {
         if (user == null) {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("Debes iniciar sesión para realizar una compra")
+                snackbarHostState.showSnackbar("Debes iniciar sesion para realizar una compra")
             }
         } else if (cartItems.isEmpty()) {
             coroutineScope.launch {
@@ -62,7 +60,7 @@ fun CartScreen(
             }
         } else {
             coroutineScope.launch {
-                val purchaseId = purchaseViewModel.realizarCompra(cartItems, user!!.id)
+                val purchaseId = purchaseViewModel.realizarCompra(cartItems, user!!.id.toInt())
                 if (purchaseId != null) {
                     // Compra exitosa
                     viewModel.clearCart()
@@ -127,7 +125,7 @@ fun CartScreen(
     
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // TopBar
             Surface(

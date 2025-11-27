@@ -862,40 +862,37 @@ Tareas completadas y validadas.
     - ✅ Scaffold con SnackbarHost para mensajes
   - **Estado**: CartScreen completamente funcional con checkout
 
-- [x] **Agregar migración de base de datos para PurchaseEntity** ✅ COMPLETADO
-  - **Archivo modificado**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+- [x] **Crear entidades PurchaseEntity y PurchaseItemEntity con Room** ✅ COMPLETADO
+  - **Archivos creados**:
+    - `PurchaseEntity.kt` - Entidad con `@Entity`, `@ForeignKey` a UserEntity
+    - `PurchaseItemEntity.kt` - Entidad con `@Entity`, `@ForeignKey` a PurchaseEntity
   - **Implementación**:
-    1. ✅ Versión incrementada de 3 a 4
-    2. ✅ Migración `MIGRATION_3_4` creada con SQL:
-       - ✅ Tabla `compras` con: id (PK), userId (FK), fecha, total, estado
-       - ✅ Tabla `purchase_items` con: id (PK autoincrement), purchaseId (FK), productId, nombre, precio, cantidad, imagen
-       - ✅ Foreign Keys con CASCADE DELETE
-    3. ✅ `PurchaseEntity` y `PurchaseItemEntity` agregadas a `@Database`
-    4. ✅ `purchaseDao(): PurchaseDao` agregado al AppDatabase
-    5. ✅ Migración agregada al builder: `.addMigrations(MIGRATION_2_3, MIGRATION_3_4)`
-  - **SQL implementado**:
-    ```sql
-    CREATE TABLE IF NOT EXISTS compras (
-        id TEXT PRIMARY KEY NOT NULL,
-        userId INTEGER NOT NULL,
-        fecha TEXT NOT NULL,
-        total INTEGER NOT NULL,
-        estado TEXT NOT NULL,
-        FOREIGN KEY(userId) REFERENCES usuario(id) ON DELETE CASCADE
-    );
-    
-    CREATE TABLE IF NOT EXISTS purchase_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        purchaseId TEXT NOT NULL,
-        productId TEXT NOT NULL,
-        nombre TEXT NOT NULL,
-        precio INTEGER NOT NULL,
-        cantidad INTEGER NOT NULL,
-        imagen TEXT NOT NULL,
-        FOREIGN KEY(purchaseId) REFERENCES compras(id) ON DELETE CASCADE
-    );
-    ```
-  - **Estado**: Migración completa y funcional
+    - ✅ Entidades creadas con anotaciones `@Entity` y `@ForeignKey`
+    - ✅ Agregadas a lista de entidades en `@Database`
+    - ✅ `purchaseDao()` agregado al AppDatabase
+    - ✅ Room crea las tablas automáticamente desde las entidades
+  - **Estado**: Completado
+
+- [ ] **Asociar carrito de compras a usuarios (carrito por usuario)**
+  - **Contexto**: Actualmente el carrito es global. Cada usuario debe tener su propio carrito independiente.
+  - **Archivos a modificar**:
+    - `CartEntity.kt` - Agregar campo `userId: Int` con `@ForeignKey` a UserEntity
+    - `CartDao.kt` - Actualizar queries para filtrar por `userId`
+    - `CartRepository.kt` y `CartRepositoryImpl.kt` - Agregar `userId` a todos los métodos
+    - `CartViewModel.kt` - Obtener `userId` del usuario autenticado y pasarlo a repositorio
+    - `AuthViewModel.kt` - Limpiar carrito al hacer logout
+    - `AppDatabase.kt` - Incrementar versión (Room recreará tabla automáticamente desde CartEntity)
+  - **Implementación**:
+    1. Modificar `CartEntity`: Agregar `userId: Int` con `@ForeignKey` a UserEntity
+    2. Actualizar `CartDao`: Agregar `userId` a todas las queries (`getAllCartItems(userId)`, `getCartItemById(productId, userId)`, etc.)
+    3. Actualizar `CartRepository` y `CartRepositoryImpl`: Todos los métodos reciben `userId`
+    4. Actualizar `CartViewModel`: Obtener `userId` de AuthViewModel y pasarlo a repositorio
+    5. Actualizar `AuthViewModel.logout()`: Limpiar carrito antes de cerrar sesión
+    6. Incrementar versión en `AppDatabase`: Room recreará la tabla automáticamente desde CartEntity
+  - **Consideraciones**:
+    - Usuarios no autenticados: No permitir agregar al carrito o usar `userId = 0`
+    - Al hacer login: Cargar carrito del usuario
+    - Al hacer logout: Limpiar carrito del usuario
 
 #### ⭐ Sistema de Reseñas
 - [ ] **Crear entidad ReviewEntity para reseñas en base de datos**
@@ -1106,7 +1103,7 @@ Tareas completadas y validadas.
 | 🟢 Done | 50+ | ~60% |
 | 🟠 Code Review | 1 | ~1% |
 | 🟡 Doing | 0 | ~0% |
-| 🔵 Backlog (Crítico) | 28 | ~33% |
+| 🔵 Backlog (Crítico) | 29 | ~34% |
 | 🔵 Backlog (Post-Evaluación) | 5+ | ~6% |
 
 ### 📈 Progreso para Evaluación
@@ -1120,11 +1117,11 @@ Tareas completadas y validadas.
 **Tareas Críticas Pendientes:**
 - ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
 - ❌ Migración de Productos (JSON → Room): 0/9 tareas (0%) - **PENDIENTE**
-- ❌ Checkout e Historial de Compras: 0/8 tareas (0%) - **PENDIENTE**
+- ❌ Checkout e Historial de Compras: 1/9 tareas (11%) - **PENDIENTE** (falta asociar carrito a usuarios)
 - ❌ Sistema de Reseñas: 0/9 tareas (0%) - **PENDIENTE**
 - ⚠️ Imágenes por defecto en productos: 0/1 tarea (0%) - **PENDIENTE** (no crítico)
 
-**Total crítico pendiente: 27 tareas** (1 Trello + 9 Migración + 8 Checkout + 9 Reseñas)
+**Total crítico pendiente: 28 tareas** (1 Trello + 9 Migración + 9 Checkout + 9 Reseñas)
 
 ---
 

@@ -13,48 +13,48 @@ class CartRepositoryImpl @Inject constructor(
     private val cartDao: CartDao
 ) : CartRepository {
     
-    override fun getAllCartItems(): Flow<List<CartItem>> {
-        return cartDao.getAllCartItems().map { entities ->
+    override fun getAllCartItems(userId: Int): Flow<List<CartItem>> {
+        return cartDao.getAllCartItems(userId).map { entities ->
             entities.map { it.toCartItem() }
         }
     }
     
-    override suspend fun getCartItemById(productId: String): CartItem? {
-        return cartDao.getCartItemById(productId)?.toCartItem()
+    override suspend fun getCartItemById(productId: String, userId: Int): CartItem? {
+        return cartDao.getCartItemById(productId, userId)?.toCartItem()
     }
     
-    override suspend fun addToCart(cartItem: CartItem) {
-        val existingItem = cartDao.getCartItemById(cartItem.id)
+    override suspend fun addToCart(cartItem: CartItem, userId: Int) {
+        val existingItem = cartDao.getCartItemById(cartItem.id, userId)
         if (existingItem != null) {
             // Si ya existe, actualizar la cantidad
             val updatedItem = existingItem.copy(cantidad = existingItem.cantidad + cartItem.cantidad)
             cartDao.updateCartItem(updatedItem)
         } else {
             // Si no existe, insertar nuevo
-            cartDao.insertCartItem(cartItem.toCartEntity())
+            cartDao.insertCartItem(cartItem.toCartEntity(userId))
         }
     }
     
-    override suspend fun updateCartItem(cartItem: CartItem) {
-        cartDao.updateCartItem(cartItem.toCartEntity())
+    override suspend fun updateCartItem(cartItem: CartItem, userId: Int) {
+        cartDao.updateCartItem(cartItem.toCartEntity(userId))
     }
     
-    override suspend fun removeFromCart(productId: String) {
-        cartDao.deleteCartItemById(productId)
+    override suspend fun removeFromCart(productId: String, userId: Int) {
+        cartDao.deleteCartItemById(productId, userId)
     }
     
-    override suspend fun clearCart() {
-        cartDao.clearCart()
+    override suspend fun clearCart(userId: Int) {
+        cartDao.clearCart(userId)
     }
     
-    override fun getCartItemCount(): Flow<Int> {
-        return getAllCartItems().map { list ->
+    override fun getCartItemCount(userId: Int): Flow<Int> {
+        return getAllCartItems(userId).map { list ->
             list.sumOf { it.cantidad }
         }
     }
     
-    override fun getCartTotalPrice(): Flow<Int> {
-        return getAllCartItems().map { list ->
+    override fun getCartTotalPrice(userId: Int): Flow<Int> {
+        return getAllCartItems(userId).map { list ->
             list.sumOf { it.subtotal }
         }
     }

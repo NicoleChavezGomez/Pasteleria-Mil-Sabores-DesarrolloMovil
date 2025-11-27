@@ -746,163 +746,156 @@ Tareas completadas y validadas.
     - `ProductRepositoryImpl.kt` - Ya no usaría JSON para consultas
 
 #### 🛒 Checkout e Historial de Compras
-- [ ] **Crear entidad PurchaseEntity/OrderEntity para compras**
+- [x] **Crear entidad PurchaseEntity/OrderEntity para compras** ✅ COMPLETADO
   - **Contexto**: Necesitamos almacenar el historial de compras de los usuarios
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseEntity.kt`
-  - **Campos sugeridos**:
-    - `id: String` (PrimaryKey) - ID único de la compra (puede ser UUID o timestamp)
-    - `userId: Int` - ID del usuario que realizó la compra (Foreign Key a UserEntity)
-    - `fecha: String` - Fecha de la compra (formato ISO o timestamp)
-    - `total: Int` - Total de la compra en pesos chilenos
-    - `items: String` - JSON string con los items comprados (o crear tabla separada PurchaseItemEntity)
-  - **Alternativa con tabla separada** (más normalizado):
-    - `PurchaseEntity`: id, userId, fecha, total
-    - `PurchaseItemEntity`: id, purchaseId (FK), productId, nombre, precio, cantidad, imagen
-  - **Consideraciones**:
-    - Usar relación Foreign Key con UserEntity
-    - Considerar usar tabla separada para items si se necesita más flexibilidad
-    - Almacenar snapshot de productos (nombre, precio) al momento de compra (productos pueden cambiar)
-  - **Archivos a modificar**:
-    - `AppDatabase.kt` (agregar entidad, incrementar versión, crear migración)
-    - Crear `PurchaseDao.kt` con queries para obtener compras por usuario
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseEntity.kt`
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseItemEntity.kt`
+  - **Implementación**:
+    - ✅ `PurchaseEntity`: id (String UUID), userId (FK), fecha (ISO 8601), total, estado
+    - ✅ `PurchaseItemEntity`: id (autoincrement), purchaseId (FK), productId, nombre, precio, cantidad, imagen
+    - ✅ Tabla separada para items (más normalizado)
+    - ✅ Foreign Keys configuradas con CASCADE DELETE
+    - ✅ Snapshot de productos al momento de compra
+  - **Estado**: Implementado con tabla separada para mejor normalización
 
-- [ ] **Crear PurchaseDao con queries necesarias**
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseDao.kt`
-  - **Queries a implementar**:
-    - `@Insert suspend fun insertar(purchase: PurchaseEntity): Long` - Insertar nueva compra
-    - `@Query("SELECT * FROM compras WHERE userId = :userId ORDER BY fecha DESC") suspend fun obtenerPorUsuario(userId: Int): List<PurchaseEntity>` - Obtener compras de un usuario
-    - `@Query("SELECT * FROM compras WHERE id = :id") suspend fun obtenerPorId(id: String): PurchaseEntity?` - Obtener compra específica
-    - Si se usa tabla separada: `@Query("SELECT * FROM purchase_items WHERE purchaseId = :purchaseId") suspend fun obtenerItemsPorCompra(purchaseId: String): List<PurchaseItemEntity>`
-  - **Consideraciones**:
-    - Usar `suspend` para operaciones asíncronas
-    - Ordenar por fecha descendente (más recientes primero)
+- [x] **Crear PurchaseDao con queries necesarias** ✅ COMPLETADO
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseDao.kt`
+  - **Queries implementadas**:
+    - ✅ `insertarCompra(purchase: PurchaseEntity): Long` - Insertar nueva compra
+    - ✅ `insertarItems(items: List<PurchaseItemEntity>)` - Insertar items de compra
+    - ✅ `obtenerComprasPorUsuario(userId: Int): List<PurchaseEntity>` - Obtener compras ordenadas por fecha DESC
+    - ✅ `obtenerCompraPorId(purchaseId: String): PurchaseEntity?` - Obtener compra específica
+    - ✅ `obtenerItemsPorCompra(purchaseId: String): List<PurchaseItemEntity>` - Obtener items de una compra
+    - ✅ `contarComprasPorUsuario(userId: Int): Int` - Estadística de compras
+    - ✅ `obtenerTotalGastadoPorUsuario(userId: Int): Int` - Total gastado por usuario
+  - **Estado**: Implementado con queries adicionales para estadísticas
 
-- [ ] **Crear modelo de dominio Purchase**
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/domain/model/Purchase.kt`
-  - **Estructura sugerida**:
-    ```kotlin
-    data class Purchase(
-        val id: String,
-        val userId: String,
-        val fecha: String,
-        val total: Int,
-        val items: List<PurchaseItem>
-    )
-    
-    data class PurchaseItem(
-        val productId: String,
-        val nombre: String,
-        val precio: Int,
-        val cantidad: Int,
-        val imagen: String
-    )
-    ```
-  - **Mapper**: Crear `PurchaseMapper.kt` para convertir entre `PurchaseEntity` y `Purchase`
+- [x] **Crear modelo de dominio Purchase** ✅ COMPLETADO
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/domain/model/Purchase.kt`
+  - **Implementación**:
+    - ✅ `Purchase`: id, userId, fecha, total, estado, items (List<PurchaseItem>)
+    - ✅ `PurchaseItem`: id, productId, nombre, precio, cantidad, imagen
+    - ✅ Propiedad calculada `subtotal` en PurchaseItem (precio * cantidad)
+  - **Mapper**: Conversión implementada directamente en PurchaseViewModel
+  - **Estado**: Modelos de dominio completos con documentación
 
-- [ ] **Implementar PurchaseViewModel para gestionar compras**
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/PurchaseViewModel.kt`
-  - **Funcionalidades**:
-    - `StateFlow<List<Purchase>>` para historial de compras
-    - `StateFlow<Purchase?>` para compra actual (si se necesita)
-    - Función `realizarCompra(cartItems: List<CartEntity>, userId: Int)` - Simular checkout
-    - Función `obtenerHistorialCompras(userId: Int)` - Cargar historial
-    - Función `obtenerCompraPorId(id: String)` - Obtener compra específica
-  - **Lógica de checkout**:
-    1. Validar que hay items en el carrito
-    2. Validar que el usuario está autenticado
-    3. Crear `PurchaseEntity` con items del carrito
-    4. Insertar en base de datos
-    5. Limpiar carrito (llamar a `CartViewModel.clearCart()`)
-    6. Mostrar mensaje de éxito
-    7. Navegar a pantalla de confirmación o historial
-  - **Consideraciones**:
-    - Usar `viewModelScope.launch` para operaciones asíncronas
-    - Manejar errores con try-catch
-    - Actualizar StateFlow después de operaciones exitosas
+- [x] **Implementar PurchaseViewModel para gestionar compras** ✅ COMPLETADO
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/PurchaseViewModel.kt`
+  - **Funcionalidades implementadas**:
+    - ✅ `StateFlow<List<Purchase>>` - purchaseHistory
+    - ✅ `StateFlow<Purchase?>` - currentPurchase
+    - ✅ `StateFlow<Boolean>` - isLoading
+    - ✅ `StateFlow<String?>` - message
+    - ✅ `realizarCompra(cartItems: List<CartItem>, userId: Int): String?` - Checkout completo
+    - ✅ `obtenerHistorialCompras(userId: Int)` - Cargar historial con items
+    - ✅ `obtenerCompraPorId(purchaseId: String)` - Obtener compra específica
+    - ✅ `formatearFecha()` - Formato legible de fechas (ISO -> "dd MMM yyyy, HH:mm")
+  - **Lógica de checkout implementada**:
+    - ✅ Validación de carrito vacío
+    - ✅ Generación de UUID para ID de compra
+    - ✅ Cálculo de total automático
+    - ✅ Creación de PurchaseEntity y PurchaseItemEntity
+    - ✅ Inserción en base de datos
+    - ✅ Manejo de errores con try-catch
+    - ✅ Estados de carga y mensajes
+  - **Estado**: ViewModel completo con todas las funcionalidades
 
-- [ ] **Implementar función de checkout en CartViewModel o crear función separada**
+- [x] **Implementar función de checkout en CartViewModel o crear función separada** ✅ COMPLETADO
   - **Contexto**: Simular el proceso de compra desde el carrito
-  - **Opciones**:
-    - **Opción A**: Agregar función `checkout(userId: Int)` en `CartViewModel`
-    - **Opción B**: Crear función en `PurchaseViewModel` que reciba items del carrito
-  - **Recomendación**: Opción B (separación de responsabilidades)
-  - **Flujo**:
-    1. Usuario presiona botón "Comprar" en `CartScreen`
-    2. `CartScreen` llama a `PurchaseViewModel.realizarCompra(cartItems, userId)`
-    3. `PurchaseViewModel` crea `PurchaseEntity` y la inserta
-    4. `PurchaseViewModel` llama a `CartViewModel.clearCart()` para limpiar carrito
-    5. Mostrar mensaje de éxito/confirmación
-    6. Navegar a pantalla de historial o home
+  - **Opción implementada**: Opción B - Función en `PurchaseViewModel` (separación de responsabilidades)
+  - **Flujo implementado**:
+    1. ✅ Usuario presiona botón "Comprar" en `CartScreen`
+    2. ✅ Validación de autenticación (si no está autenticado, muestra mensaje)
+    3. ✅ `CartScreen` llama a `PurchaseViewModel.realizarCompra(cartItems, userId)`
+    4. ✅ `PurchaseViewModel` crea PurchaseEntity y PurchaseItemEntity
+    5. ✅ Inserción en base de datos
+    6. ✅ `CartScreen` llama a `CartViewModel.clearCart()` después de compra exitosa
+    7. ✅ Diálogo de éxito con opciones de navegación
+    8. ✅ Navegación a historial o home
+  - **Estado**: Implementado con separación de responsabilidades
 
-- [ ] **Crear pantalla de Historial de Compras (PurchaseHistoryScreen)**
-  - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/purchasehistory/PurchaseHistoryScreen.kt`
-  - **Funcionalidades**:
-    - Mostrar lista de compras del usuario autenticado
-    - Ordenar por fecha (más recientes primero)
-    - Mostrar información de cada compra:
-      - Fecha de compra
-      - Total pagado
-      - Cantidad de items
-      - Lista expandible de items (opcional)
-    - Navegación a detalle de compra (opcional)
-  - **UI sugerida**:
-    - `LazyColumn` con items de compra
-    - `Card` para cada compra con información resumida
-    - Botón para expandir/ver detalles de items
-    - Estado vacío si no hay compras
+- [x] **Crear pantalla de Historial de Compras (PurchaseHistoryScreen)** ✅ COMPLETADO
+  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/purchasehistory/PurchaseHistoryScreen.kt`
+  - **Funcionalidades implementadas**:
+    - ✅ Lista de compras del usuario autenticado
+    - ✅ Ordenadas por fecha (más recientes primero)
+    - ✅ Información de cada compra: fecha, total, cantidad de items, estado
+    - ✅ Lista expandible de items con animaciones
+    - ✅ Imágenes de productos en items
+    - ✅ Cálculo de subtotales por item
+  - **UI implementada**:
+    - ✅ `LazyColumn` con `animateItemPlacement()`
+    - ✅ `PurchaseCard` con información resumida
+    - ✅ Botón expandir/colapsar con animación de rotación
+    - ✅ `StatusChip` con colores según estado
+    - ✅ Estado vacío con icono y mensaje
+    - ✅ Estado de carga con CircularProgressIndicator
+    - ✅ Manejo de usuario no autenticado
   - **Integración**:
-    - Usar `PurchaseViewModel` para obtener datos
-    - Usar `AuthViewModel` para obtener usuario autenticado
-    - Agregar ruta en `Screen.kt` y `AppNavigation.kt`
+    - ✅ PurchaseViewModel para datos
+    - ✅ AuthViewModel para usuario autenticado
+    - ✅ Ruta agregada en `Screen.kt` (Screen.PurchaseHistory)
+    - ✅ Ruta agregada en `AppNavigation.kt`
+    - ✅ Opción en NavigationDrawer (solo usuarios autenticados)
+  - **Estado**: Pantalla completa con animaciones y estados
 
-- [ ] **Actualizar CartScreen con botón de checkout funcional**
-  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/cart/CartScreen.kt`
-  - **Modificaciones**:
-    - Agregar validación: Solo mostrar botón "Comprar" si usuario está autenticado
-    - Si no está autenticado: Mostrar mensaje "Inicia sesión para comprar" o botón para ir a Login
-    - Al presionar "Comprar":
-      1. Validar que hay items en el carrito
-      2. Obtener usuario autenticado de `AuthViewModel`
-      3. Llamar a `PurchaseViewModel.realizarCompra(cartItems, userId)`
-      4. Mostrar diálogo de confirmación o snackbar de éxito
-      5. Navegar a pantalla de confirmación o historial
-  - **Consideraciones**:
-    - Deshabilitar botón si carrito está vacío
-    - Mostrar loading durante el proceso de checkout
-    - Manejar errores (mostrar mensaje al usuario)
+- [x] **Actualizar CartScreen con botón de checkout funcional** ✅ COMPLETADO
+  - **Archivo modificado**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/cart/CartScreen.kt`
+  - **Modificaciones implementadas**:
+    - ✅ Función signature actualizada: recibe `AuthViewModel` y `PurchaseViewModel`
+    - ✅ Validación de autenticación antes de comprar
+    - ✅ Texto dinámico en botón: "Comprar" si autenticado, "Iniciar Sesión" si no
+    - ✅ Snackbar para mensajes de error/información
+    - ✅ Función `onCheckout` con lógica completa:
+      1. ✅ Validar autenticación (mensaje si no está autenticado)
+      2. ✅ Validar carrito no vacío
+      3. ✅ Llamar a `PurchaseViewModel.realizarCompra(cartItems, userId)`
+      4. ✅ Limpiar carrito con `CartViewModel.clearCart()` si exitoso
+      5. ✅ Mostrar diálogo de éxito con opciones de navegación
+    - ✅ Diálogo de éxito (`AlertDialog`) con:
+      - ✅ Icono de check animado
+      - ✅ Mensaje de confirmación
+      - ✅ Botón "Ver Historial" (navega a purchase_history)
+      - ✅ Botón "Volver al Inicio" (popBackStack)
+    - ✅ Botón deshabilitado si `isLoading` o carrito vacío
+    - ✅ CircularProgressIndicator en botón durante carga
+    - ✅ Scaffold con SnackbarHost para mensajes
+  - **Estado**: CartScreen completamente funcional con checkout
 
-- [ ] **Agregar migración de base de datos para PurchaseEntity**
-  - **Archivo a modificar**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
-  - **Pasos**:
-    1. Incrementar versión de base de datos (de 3 a 4)
-    2. Crear migración `MIGRATION_3_4`:
-       - Crear tabla `compras` con campos necesarios
-       - Si se usa tabla separada: Crear tabla `purchase_items` también
-    3. Agregar `PurchaseEntity` a la lista de entidades en `@Database`
-    4. Agregar `purchaseDao(): PurchaseDao` al `AppDatabase`
-    5. Agregar migración al builder con `.addMigrations(MIGRATION_3_4)`
-  - **SQL sugerido**:
+- [x] **Agregar migración de base de datos para PurchaseEntity** ✅ COMPLETADO
+  - **Archivo modificado**: `app/src/main/java/com/example/milsaborestest/data/local/database/AppDatabase.kt`
+  - **Implementación**:
+    1. ✅ Versión incrementada de 3 a 4
+    2. ✅ Migración `MIGRATION_3_4` creada con SQL:
+       - ✅ Tabla `compras` con: id (PK), userId (FK), fecha, total, estado
+       - ✅ Tabla `purchase_items` con: id (PK autoincrement), purchaseId (FK), productId, nombre, precio, cantidad, imagen
+       - ✅ Foreign Keys con CASCADE DELETE
+    3. ✅ `PurchaseEntity` y `PurchaseItemEntity` agregadas a `@Database`
+    4. ✅ `purchaseDao(): PurchaseDao` agregado al AppDatabase
+    5. ✅ Migración agregada al builder: `.addMigrations(MIGRATION_2_3, MIGRATION_3_4)`
+  - **SQL implementado**:
     ```sql
-    CREATE TABLE compras (
-        id TEXT PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS compras (
+        id TEXT PRIMARY KEY NOT NULL,
         userId INTEGER NOT NULL,
         fecha TEXT NOT NULL,
         total INTEGER NOT NULL,
-        FOREIGN KEY(userId) REFERENCES usuario(id)
+        estado TEXT NOT NULL,
+        FOREIGN KEY(userId) REFERENCES usuario(id) ON DELETE CASCADE
     );
     
-    -- Si se usa tabla separada:
-    CREATE TABLE purchase_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS purchase_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         purchaseId TEXT NOT NULL,
         productId TEXT NOT NULL,
         nombre TEXT NOT NULL,
         precio INTEGER NOT NULL,
         cantidad INTEGER NOT NULL,
-        imagen TEXT,
-        FOREIGN KEY(purchaseId) REFERENCES compras(id)
+        imagen TEXT NOT NULL,
+        FOREIGN KEY(purchaseId) REFERENCES compras(id) ON DELETE CASCADE
     );
     ```
+  - **Estado**: Migración completa y funcional
 
 #### ⭐ Sistema de Reseñas
 - [ ] **Crear entidad ReviewEntity para reseñas en base de datos**

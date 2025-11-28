@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -243,33 +244,36 @@ fun ProfileImage(
 ) {
     val imagePath = user.fotoPerfil
     
-    if (imagePath != null && imagePath.isNotBlank()) {
-        // Intentar cargar imagen desde storage
-        val imageFile = File(imagePath)
-        if (imageFile.exists()) {
-            AsyncImage(
-                model = imageFile,
-                contentDescription = "Foto de perfil",
-                placeholder = painterResource(R.drawable.user_default),
-                error = painterResource(R.drawable.user_default),
-                fallback = painterResource(R.drawable.user_default),
-                modifier = modifier
-            )
+    // Usar key para forzar recomposición cuando cambie la ruta de la imagen
+    key(imagePath) {
+        if (imagePath != null && imagePath.isNotBlank()) {
+            // Intentar cargar imagen desde storage
+            val imageFile = File(imagePath)
+            if (imageFile.exists()) {
+                AsyncImage(
+                    model = imageFile,
+                    contentDescription = "Foto de perfil",
+                    placeholder = painterResource(R.drawable.user_default),
+                    error = painterResource(R.drawable.user_default),
+                    fallback = painterResource(R.drawable.user_default),
+                    modifier = modifier
+                )
+            } else {
+                // Archivo no existe, mostrar imagen por defecto
+                Image(
+                    painter = painterResource(R.drawable.user_default),
+                    contentDescription = "Foto de perfil por defecto",
+                    modifier = modifier
+                )
+            }
         } else {
-            // Archivo no existe, mostrar imagen por defecto
+            // No hay foto, mostrar imagen por defecto
             Image(
                 painter = painterResource(R.drawable.user_default),
                 contentDescription = "Foto de perfil por defecto",
                 modifier = modifier
             )
         }
-    } else {
-        // No hay foto, mostrar imagen por defecto
-        Image(
-            painter = painterResource(R.drawable.user_default),
-            contentDescription = "Foto de perfil por defecto",
-            modifier = modifier
-        )
     }
 }
 

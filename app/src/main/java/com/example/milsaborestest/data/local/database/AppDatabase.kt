@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +18,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         ProductEntity::class
     ],
-    version = 6,
+    version = 1,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -31,106 +29,24 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     
     companion object {
-        @Volatile
-        private var INSTANCE: AppDatabase? = null
-        
-        // Migración de versión 2 a 3: Agregar campo fotoPerfil a la tabla usuario
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("ALTER TABLE usuario ADD COLUMN fotoPerfil TEXT")
-            }
-        }
-        
-        // Migración de versión 3 a 4: Agregar tablas de compras e items de compra
-        val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Crear tabla de compras
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS compras (
-                        id TEXT PRIMARY KEY NOT NULL,
-                        userId INTEGER NOT NULL,
-                        fecha TEXT NOT NULL,
-                        total INTEGER NOT NULL,
-                        estado TEXT NOT NULL,
-                        FOREIGN KEY(userId) REFERENCES usuario(id) ON DELETE CASCADE
-                    )
-                """.trimIndent())
-                
-                // Crear tabla de items de compra
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS purchase_items (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        purchaseId TEXT NOT NULL,
-                        productId TEXT NOT NULL,
-                        nombre TEXT NOT NULL,
-                        precio INTEGER NOT NULL,
-                        cantidad INTEGER NOT NULL,
-                        imagen TEXT NOT NULL,
-                        FOREIGN KEY(purchaseId) REFERENCES compras(id) ON DELETE CASCADE
-                    )
-                """.trimIndent())
-            }
-        }
-        
-        // Migración de versión 5 a 6: Agregar tablas de categorías y productos
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Crear tabla de categorías
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS categoria (
-                        id TEXT PRIMARY KEY NOT NULL,
-                        nombre TEXT NOT NULL,
-                        icono TEXT NOT NULL
-                    )
-                """.trimIndent())
-                
-                // Crear tabla de productos
-                database.execSQL("""
-                    CREATE TABLE IF NOT EXISTS producto (
-                        id TEXT PRIMARY KEY NOT NULL,
-                        nombre TEXT NOT NULL,
-                        precio INTEGER NOT NULL,
-                        imagen TEXT NOT NULL,
-                        descripcion TEXT NOT NULL,
-                        descripcionDetallada TEXT NOT NULL,
-                        rating REAL NOT NULL,
-                        reviews INTEGER NOT NULL,
-                        porciones TEXT NOT NULL,
-                        calorias TEXT NOT NULL,
-                        ingredientes TEXT NOT NULL,
-                        categoryId TEXT NOT NULL,
-                        FOREIGN KEY(categoryId) REFERENCES categoria(id) ON DELETE CASCADE
-                    )
-                """.trimIndent())
-                
-                // Crear índice para categoryId
-                database.execSQL("CREATE INDEX IF NOT EXISTS index_producto_categoryId ON producto(categoryId)")
-            }
-        }
+        private var database: AppDatabase? = null
         
         fun getDatabase(context: Context): AppDatabase {
-            if (INSTANCE == null) {
-                synchronized(this) {
-                    if (INSTANCE == null) {
-                        val database = Room.databaseBuilder(
-                            context.applicationContext,
-                            AppDatabase::class.java,
-                            "milsabores_database"
-                        )
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6)
-                        .fallbackToDestructiveMigration() // Para desarrollo, permite recrear DB en cambios de versión
-                        .build()
-                        
-                        INSTANCE = database
-                        
-                        // Insertar datos por defecto después de construir la base de datos
-                        CoroutineScope(Dispatchers.IO).launch {
-                            insertarDatosPorDefecto(database, context.applicationContext)
-                        }
-                    }
+            if (database == null) {
+                database = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "milsabores_database"
+                )
+                .fallbackToDestructiveMigration() // Eliminar la base de datos al cambiar la versión
+                .build()
+                
+                // Insertar datos por defecto después de construir la base de datos
+                CoroutineScope(Dispatchers.IO).launch {
+                    insertarDatosPorDefecto(database!!, context.applicationContext)
                 }
             }
-            return INSTANCE!!
+            return database!!
         }
         
         private suspend fun insertarDatosPorDefecto(db: AppDatabase, context: Context) {

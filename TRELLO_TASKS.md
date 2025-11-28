@@ -873,26 +873,25 @@ Tareas completadas y validadas.
     - ✅ Room crea las tablas automáticamente desde las entidades
   - **Estado**: Completado
 
-- [ ] **Asociar carrito de compras a usuarios (carrito por usuario)**
+- [x] **Asociar carrito de compras a usuarios (carrito por usuario)** ✅ COMPLETADO
   - **Contexto**: Actualmente el carrito es global. Cada usuario debe tener su propio carrito independiente.
-  - **Archivos a modificar**:
-    - `CartEntity.kt` - Agregar campo `userId: Int` con `@ForeignKey` a UserEntity
-    - `CartDao.kt` - Actualizar queries para filtrar por `userId`
-    - `CartRepository.kt` y `CartRepositoryImpl.kt` - Agregar `userId` a todos los métodos
-    - `CartViewModel.kt` - Obtener `userId` del usuario autenticado y pasarlo a repositorio
-    - `AuthViewModel.kt` - Limpiar carrito al hacer logout
-    - `AppDatabase.kt` - Incrementar versión (Room recreará tabla automáticamente desde CartEntity)
-  - **Implementación**:
-    1. Modificar `CartEntity`: Agregar `userId: Int` con `@ForeignKey` a UserEntity
-    2. Actualizar `CartDao`: Agregar `userId` a todas las queries (`getAllCartItems(userId)`, `getCartItemById(productId, userId)`, etc.)
-    3. Actualizar `CartRepository` y `CartRepositoryImpl`: Todos los métodos reciben `userId`
-    4. Actualizar `CartViewModel`: Obtener `userId` de AuthViewModel y pasarlo a repositorio
-    5. Actualizar `AuthViewModel.logout()`: Limpiar carrito antes de cerrar sesión
-    6. Incrementar versión en `AppDatabase`: Room recreará la tabla automáticamente desde CartEntity
-  - **Consideraciones**:
-    - Usuarios no autenticados: No permitir agregar al carrito o usar `userId = 0`
-    - Al hacer login: Cargar carrito del usuario
-    - Al hacer logout: Limpiar carrito del usuario
+  - **Estado**: ✅ IMPLEMENTADO Y FUNCIONANDO
+  - **Archivos verificados**:
+    - ✅ `CartEntity.kt` - Tiene campo `userId: Int` con `@ForeignKey` a UserEntity
+    - ✅ `CartDao.kt` - Todas las queries filtran por `userId` (getAllCartItems(userId), getCartItemById(productId, userId), clearCart(userId))
+    - ✅ `CartRepository.kt` y `CartRepositoryImpl.kt` - Todos los métodos reciben `userId`
+    - ✅ `CartViewModel.kt` - Tiene `setUserId(userId: Int?)` y usa `_currentUserId` para filtrar carrito por usuario
+    - ✅ `AuthViewModel.kt` - Limpia carrito al hacer logout (línea 88-89)
+    - ✅ `MainContent.kt` - Llama `cartViewModel.setUserId(userId)` cuando cambia el usuario (línea 68)
+    - ✅ `AppDatabase.kt` - Versión 5, CartEntity incluye userId con ForeignKey
+  - **Implementación verificada**:
+    1. ✅ `CartEntity` tiene `userId: Int` con `@ForeignKey` a UserEntity
+    2. ✅ `CartDao` tiene `userId` en todas las queries
+    3. ✅ `CartRepository` y `CartRepositoryImpl` reciben `userId` en todos los métodos
+    4. ✅ `CartViewModel` tiene `setUserId()` y usa `_currentUserId.flatMapLatest` para filtrar por usuario
+    5. ✅ `AuthViewModel.logout()` limpia carrito antes de cerrar sesión
+    6. ✅ `MainContent` sincroniza userId del usuario autenticado con CartViewModel
+  - **Estado**: ✅ COMPLETADO - Carrito funciona correctamente por usuario
 
 #### ⭐ Sistema de Reseñas
 - [ ] **Crear entidad ReviewEntity para reseñas en base de datos**
@@ -1117,8 +1116,8 @@ Tareas completadas y validadas.
 **Tareas Críticas Pendientes:**
 - ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
 - ❌ Migración de Productos (JSON → Room): 0/9 tareas (0%) - **PENDIENTE**
-- ❌ Checkout e Historial de Compras: 1/9 tareas (11%) - **PENDIENTE** (falta asociar carrito a usuarios)
-- ❌ Sistema de Reseñas: 0/9 tareas (0%) - **PENDIENTE**
+- ✅ Checkout e Historial de Compras: 9/9 tareas (100%) - **COMPLETADO** ✅
+- ❌ Sistema de Reseñas: Eliminado del proyecto
 - ⚠️ Imágenes por defecto en productos: 0/1 tarea (0%) - **PENDIENTE** (no crítico)
 
 **Total crítico pendiente: 28 tareas** (1 Trello + 9 Migración + 9 Checkout + 9 Reseñas)
@@ -1329,14 +1328,187 @@ Tareas completadas y validadas.
    - ✅ Persistencia de historial de compras por usuario implementada
    - ✅ Navegación integrada en `AppNavigation.kt` y `MainContent.kt` (Drawer)
 
-8. **Sistema de Reseñas**: ❌ PENDIENTE
-   - ❌ `ReviewEntity.kt` no existe (entidad para reseñas en BD)
-   - ❌ `ReviewDao.kt` no existe (DAO para operaciones de reseñas)
-   - ❌ Modelo de dominio `Review.kt` no tiene campo `userId` (solo tiene autor, fecha, rating, comentario)
-   - ❌ `ReviewMapper.kt` no existe (conversiones entre Entity y Domain)
-   - ❌ `ReviewViewModel.kt` no existe (gestión de reseñas)
-   - ❌ `AppDatabase.kt` no tiene tabla `reseñas` ni migración correspondiente
-   - ❌ `AppDatabase.kt` no carga reseñas default desde JSON (solo carga usuarios default)
-   - ❌ `ProductDetailScreen.kt` solo muestra reseñas del JSON, no permite agregar nuevas
-   - ❌ No hay funcionalidad para que usuarios autenticados agreguen reseñas a productos
-   - ❌ No hay persistencia de reseñas de usuarios en base de datos
+8. **Sistema de Reseñas**: ❌ ELIMINADO
+   - ⚠️ **Decisión**: No se implementará sistema de reseñas
+   - Las reseñas del JSON se mantienen como información estática en ProductDetailScreen
+
+---
+
+## 📋 LISTADO COMPLETO DE TAREAS
+
+### 🟢 TAREAS COMPLETADAS (Done)
+
+#### Arquitectura y Estructura Base
+1. ✅ Configurar proyecto Android con Compose
+2. ✅ Implementar arquitectura MVVM
+3. ✅ Configurar inyección de dependencias (Hilt)
+
+#### Base de Datos y Persistencia
+4. ✅ Implementar Room Database
+5. ✅ Sistema de autenticación con Room
+6. ✅ Persistencia de carrito de compras
+7. ✅ Persistencia de foto de perfil de usuario
+8. ✅ Sistema de persistencia general
+
+#### Recursos Nativos
+9. ✅ Sistema de notificaciones - Carrito abandonado
+10. ✅ Sistema de galería - Foto de perfil de usuario
+11. ✅ Actualizar componentes de productos con imágenes por defecto
+12. ✅ Actualizar AuthViewModel para manejar foto
+
+#### Navegación y UI Base
+13. ✅ Sistema de navegación con Compose Navigation
+14. ✅ Implementar Material 3 Design
+15. ✅ Bottom Navigation Bar
+16. ✅ Navigation Drawer (Sidebar)
+17. ✅ TopBar con acciones
+
+#### Pantallas Principales
+18. ✅ HomeScreen
+19. ✅ AllProductsScreen
+20. ✅ ProductDetailScreen
+21. ✅ CartScreen
+22. ✅ AccountScreen
+
+#### Autenticación
+23. ✅ LoginScreen
+24. ✅ RegisterScreen
+25. ✅ Gestión de sesión
+
+#### Validaciones y Lógica de Negocio
+26. ✅ Validaciones centralizadas en ViewModels
+27. ✅ Lógica de carrito
+
+#### Componentes Reutilizables
+28. ✅ ProductCard
+29. ✅ CategoryCard
+30. ✅ ProductCarousel
+31. ✅ Skeleton Components
+
+#### Animaciones Básicas
+32. ✅ Shimmer animations
+33. ✅ Carousel animations
+
+#### Animaciones Mejoradas
+34. ✅ Transiciones entre pantallas
+35. ✅ Animaciones de feedback
+36. ✅ Animaciones de carga mejoradas
+37. ✅ Componentes helper de animaciones
+
+#### Control de Versiones
+38. ✅ Repositorio en GitHub
+
+#### Documentación
+39. ✅ Crear README.md completo
+
+#### Mejoras de UI/UX
+40. ✅ Reorganizar TopNavBar: Mover hamburger menu a la derecha
+41. ✅ Aumentar ancho del Sidebar de 50% a 75%
+42. ✅ Implementar pantalla de Splash con logo de Mil Sabores
+
+#### Checkout e Historial de Compras
+43. ✅ Crear entidad PurchaseEntity/OrderEntity para compras
+44. ✅ Crear PurchaseDao con queries necesarias
+45. ✅ Crear modelo de dominio Purchase
+46. ✅ Implementar PurchaseViewModel para gestionar compras
+47. ✅ Implementar función de checkout en PurchaseViewModel
+48. ✅ Crear pantalla de Historial de Compras (PurchaseHistoryScreen)
+49. ✅ Actualizar CartScreen con botón de checkout funcional
+50. ✅ Crear entidades PurchaseEntity y PurchaseItemEntity con Room
+51. ✅ Asociar carrito de compras a usuarios (carrito por usuario)
+
+---
+
+### 🟠 TAREAS EN CODE REVIEW
+
+51. ⏳ Revisar estructura de commits
+52. ✅ Revisar código de autenticación (COMPLETADO)
+
+---
+
+### 🔵 TAREAS PENDIENTES (Backlog)
+
+#### 🔴 PRIORIDAD ALTA - Tareas Críticas
+
+#### Migración de Productos de JSON a Room Database
+53. ❌ Crear entidad CategoryEntity para categorías en base de datos
+54. ❌ Crear entidad ProductEntity para productos en base de datos
+55. ❌ Crear CategoryDao con queries necesarias
+56. ❌ Crear ProductDao con queries necesarias
+57. ❌ Crear mappers para convertir entre Entity y Domain
+58. ❌ Implementar carga de productos y categorías default desde JSON
+59. ❌ Actualizar AppDatabase para incluir nuevas entidades y DAOs
+60. ❌ Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON
+61. ❌ Actualizar AppModule para inyectar nuevos DAOs
+62. ❌ Eliminar o deprecar ProductJsonDataSource
+
+#### Checkout e Historial de Compras
+~~63. ❌ Asociar carrito de compras a usuarios (carrito por usuario)~~ ✅ **COMPLETADO** (Movido a tarea #51)
+
+#### Planificación y Documentación
+73. ❌ Verificar y documentar Trello
+
+---
+
+### 📊 RESUMEN POR ESTADO
+
+| Estado | Cantidad | Porcentaje |
+|--------|----------|------------|
+| 🟢 Completadas | 51 | ~78% |
+| 🟠 Code Review | 1 | ~2% |
+| 🔵 Pendientes (Críticas) | 10 | ~15% |
+| 🔵 Pendientes (Opcionales) | 1 | ~2% |
+| **TOTAL** | **63** | **100%** |
+
+---
+
+### 📈 PROGRESO GENERAL
+
+- **Tareas Completadas**: 51/63 (81%)
+- **Tareas Pendientes Críticas**: 10/63 (16%)
+- **Tareas Pendientes Opcionales**: 1/63 (2%)
+- **Tareas en Revisión**: 1/63 (2%)
+
+---
+
+### 🎯 PRÓXIMAS ACCIONES PRIORITARIAS
+
+1. ~~**Asociar carrito de compras a usuarios** (Tarea #51)~~ ✅ **COMPLETADO**
+   - ~~Contexto: Actualmente el carrito es global, debe ser por usuario~~
+   - ~~Impacto: Funcionalidad crítica para multi-usuario~~
+
+2. **Migración de Productos a Room Database** (Tareas #53-62)
+   - Contexto: Productos actualmente se cargan desde JSON
+   - Impacto: Mejora rendimiento y permite funcionalidades avanzadas
+
+3. **Verificar y documentar Trello** (Tarea #73)
+   - Contexto: Requisito de la rúbrica
+   - Impacto: Mejora nota en planificación
+
+---
+
+**Última actualización del listado**: 28-11-2025  
+**Última verificación de codebase**: 28-11-2025
+
+### 📝 NOTAS DE VERIFICACIÓN (28-11-2025)
+
+**Tareas verificadas como COMPLETADAS:**
+- ✅ **Tarea #63 - Asociar carrito de compras a usuarios**: Verificado en codebase
+  - CartEntity tiene `userId: Int` con ForeignKey
+  - CartDao filtra por userId en todas las queries
+  - CartViewModel tiene `setUserId()` y usa `_currentUserId.flatMapLatest`
+  - MainContent sincroniza userId con CartViewModel
+  - AuthViewModel limpia carrito en logout()
+
+**Tareas verificadas como PENDIENTES:**
+- ❌ **Edición de datos de usuario**: AuthViewModel solo tiene `updateProfilePhoto()`, no tiene `updateUserData(name, email)`
+- ❌ **ReusableTextField y ReusableText**: No existen en codebase (fueron eliminados)
+- ❌ **Migración de Productos a Room**: CategoryEntity, ProductEntity, CategoryDao, ProductDao no existen
+- ❌ **Sistema de Reseñas**: Eliminado del proyecto (no se implementará)
+
+**Funcionalidades de compra verificadas:**
+- ✅ PurchaseEntity, PurchaseItemEntity existen y están en AppDatabase
+- ✅ PurchaseViewModel existe y está activo
+- ✅ PurchaseHistoryScreen existe y está en AppNavigation
+- ✅ CartScreen tiene checkout funcional con PurchaseViewModel
+- ✅ MainContent tiene navegación a PurchaseHistory en drawer

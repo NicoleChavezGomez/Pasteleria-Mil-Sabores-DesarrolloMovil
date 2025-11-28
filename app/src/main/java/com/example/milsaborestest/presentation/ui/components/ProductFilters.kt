@@ -277,7 +277,6 @@ enum class SortOption(val label: String) {
     NAME_DESC("Nombre Z-A"),
     PRICE_ASC("Precio: Menor a Mayor"),
     PRICE_DESC("Precio: Mayor a Menor"),
-    RATING_DESC("Mejor Calificados"),
-    REVIEWS_DESC("Más Reseñas")
+    RATING_DESC("Mejor Calificados")
 }
 

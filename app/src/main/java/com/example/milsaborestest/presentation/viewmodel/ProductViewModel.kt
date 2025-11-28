@@ -118,7 +118,6 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
             com.example.milsaborestest.presentation.ui.components.SortOption.PRICE_ASC -> filtered.sortedBy { it.precio }
             com.example.milsaborestest.presentation.ui.components.SortOption.PRICE_DESC -> filtered.sortedByDescending { it.precio }
             com.example.milsaborestest.presentation.ui.components.SortOption.RATING_DESC -> filtered.sortedByDescending { it.rating }
-            com.example.milsaborestest.presentation.ui.components.SortOption.REVIEWS_DESC -> filtered.sortedByDescending { it.reviews }
             else -> filtered
         }
         

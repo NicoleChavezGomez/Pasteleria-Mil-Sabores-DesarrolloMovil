@@ -4,16 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao {
-    
-    @Query("SELECT * FROM categoria ORDER BY nombre")
-    fun obtenerTodas(): Flow<List<CategoryEntity>>
-    
-    @Query("SELECT * FROM categoria WHERE id = :categoryId")
-    suspend fun obtenerPorId(categoryId: String): CategoryEntity?
     
     @Query("SELECT * FROM categoria ORDER BY nombre")
     suspend fun obtenerTodasSuspend(): List<CategoryEntity>

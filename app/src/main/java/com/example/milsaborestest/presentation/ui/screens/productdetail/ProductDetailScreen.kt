@@ -205,19 +205,6 @@ fun ProductDetailScreen(
                             text = product.ingredientes,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        
-                        // Reseñas
-                        if (product.reseñas.isNotEmpty()) {
-                            HorizontalDivider()
-                            Text(
-                                text = "Reseñas (${product.reseñas.size})",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            product.reseñas.forEach { review ->
-                                ReviewItem(review = review)
-                            }
-                        }
                     }
                 }
             }
@@ -273,49 +260,5 @@ fun InfoItem(label: String, value: String) {
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium
         )
-    }
-}
-
-@Composable
-fun ReviewItem(review: com.example.milsaborestest.domain.model.Review) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Design.PADDING_SMALL),
-        elevation = CardDefaults.cardElevation(defaultElevation = Design.CARD_ELEVATION),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
-    ) {
-        Column(modifier = Modifier.padding(Design.PADDING_MEDIUM)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = review.autor,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row {
-                    repeat(review.rating) {
-                        Icon(
-                            Icons.Filled.Star,
-                            contentDescription = "Star",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-            Text(
-                text = review.fecha,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(Design.SPACING_XSMALL))
-            Text(
-                text = review.comentario,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }

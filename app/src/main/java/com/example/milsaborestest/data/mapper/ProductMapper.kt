@@ -2,22 +2,11 @@ package com.example.milsaborestest.data.mapper
 
 import com.example.milsaborestest.data.local.database.ProductEntity
 import com.example.milsaborestest.data.local.dto.ProductDto
-import com.example.milsaborestest.data.local.dto.ReviewDto
 import com.example.milsaborestest.domain.model.Product
-import com.example.milsaborestest.domain.model.Review
 
 /**
  * Mappers para convertir DTOs a modelos de dominio
  */
-
-fun ReviewDto.toDomain(): Review {
-    return Review(
-        autor = autor,
-        fecha = fecha,
-        rating = rating,
-        comentario = comentario
-    )
-}
 
 fun ProductDto.toDomain(): Product {
     return Product(
@@ -31,15 +20,14 @@ fun ProductDto.toDomain(): Product {
         reviews = reviews,
         porciones = porciones,
         calorias = calorias,
-        ingredientes = ingredientes,
-        reseñas = reseñas.map { it.toDomain() }
+        ingredientes = ingredientes
     )
 }
 
 /**
  * Mappers para convertir entre Entity y Domain para Product
  */
-fun ProductEntity.toDomain(reseñas: List<Review> = emptyList()): Product {
+fun ProductEntity.toDomain(): Product {
     return Product(
         id = id,
         nombre = nombre,
@@ -51,14 +39,13 @@ fun ProductEntity.toDomain(reseñas: List<Review> = emptyList()): Product {
         reviews = reviews,
         porciones = porciones,
         calorias = calorias,
-        ingredientes = ingredientes,
-        reseñas = reseñas
+        ingredientes = ingredientes
     )
 }
 
-fun List<ProductEntity>.toDomain(reseñasMap: Map<String, List<Review>> = emptyMap()): List<Product> {
+fun List<ProductEntity>.toDomain(): List<Product> {
     return map { entity ->
-        entity.toDomain(reseñasMap[entity.id] ?: emptyList())
+        entity.toDomain()
     }
 }
 

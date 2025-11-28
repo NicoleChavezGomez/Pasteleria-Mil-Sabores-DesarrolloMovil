@@ -14,7 +14,6 @@ data class Product(
     val reviews: Int,
     val porciones: String,
     val calorias: String,
-    val ingredientes: String,
-    val reseñas: List<Review>
+    val ingredientes: String
 )
 

@@ -27,8 +27,7 @@ data class ProductDto(
     @SerializedName("calorias")
     val calorias: String,
     @SerializedName("ingredientes")
-    val ingredientes: String,
-    @SerializedName("reseñas")
-    val reseñas: List<ReviewDto>
+    val ingredientes: String
+    // Campo reseñas eliminado - ya no se usa en el proyecto
 )
 

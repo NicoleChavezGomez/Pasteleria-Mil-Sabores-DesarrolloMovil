@@ -7,9 +7,8 @@ import com.example.milsaborestest.domain.model.CartItem
 import com.example.milsaborestest.domain.repository.CartRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
-class CartRepositoryImpl @Inject constructor(
+class CartRepositoryImpl(
     private val cartDao: CartDao
 ) : CartRepository {
     

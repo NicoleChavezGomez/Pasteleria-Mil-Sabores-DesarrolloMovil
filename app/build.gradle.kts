@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
 }
 
@@ -57,7 +56,6 @@ dependencies {
     
     // Navigation
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
     
     // ViewModel & Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -66,10 +64,6 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
-    
-    // Hilt
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
     
     // Room (preparado para futuro)
     implementation(libs.androidx.room.runtime)

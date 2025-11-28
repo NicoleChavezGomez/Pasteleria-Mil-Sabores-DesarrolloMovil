@@ -3,8 +3,8 @@ package com.example.milsaborestest.presentation.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.milsaborestest.data.local.database.AppDatabase
 import com.example.milsaborestest.data.repository.ProductRepositoryImpl
-import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import com.example.milsaborestest.domain.model.Product
 import com.example.milsaborestest.domain.usecase.GetAllProductsUseCase
 import com.example.milsaborestest.domain.usecase.GetCategoriesUseCase
@@ -22,8 +22,10 @@ import kotlinx.coroutines.launch
 
 class ProductViewModel(application: Application) : AndroidViewModel(application) {
     
-    private val productDataSource = ProductJsonDataSource(application)
-    private val productRepository = ProductRepositoryImpl(productDataSource)
+    private val database = AppDatabase.getDatabase(application)
+    private val categoryDao = database.categoryDao()
+    private val productDao = database.productDao()
+    private val productRepository = ProductRepositoryImpl(categoryDao, productDao, application)
     private val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
     private val getProductsByCategoryUseCase = GetProductsByCategoryUseCase(productRepository)
     private val getProductByIdUseCase = GetProductByIdUseCase(productRepository)

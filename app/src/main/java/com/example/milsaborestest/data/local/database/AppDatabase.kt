@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,15 +16,19 @@ import kotlinx.coroutines.launch
         CartEntity::class,
         UserEntity::class,
         PurchaseEntity::class,
-        PurchaseItemEntity::class
+        PurchaseItemEntity::class,
+        CategoryEntity::class,
+        ProductEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun cartDao(): CartDao
     abstract fun userDao(): UserDao
     abstract fun purchaseDao(): PurchaseDao
+    abstract fun categoryDao(): CategoryDao
+    abstract fun productDao(): ProductDao
     
     companion object {
         @Volatile
@@ -67,6 +72,42 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         
+        // Migración de versión 5 a 6: Agregar tablas de categorías y productos
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Crear tabla de categorías
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS categoria (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        nombre TEXT NOT NULL,
+                        icono TEXT NOT NULL
+                    )
+                """.trimIndent())
+                
+                // Crear tabla de productos
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS producto (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        nombre TEXT NOT NULL,
+                        precio INTEGER NOT NULL,
+                        imagen TEXT NOT NULL,
+                        descripcion TEXT NOT NULL,
+                        descripcionDetallada TEXT NOT NULL,
+                        rating REAL NOT NULL,
+                        reviews INTEGER NOT NULL,
+                        porciones TEXT NOT NULL,
+                        calorias TEXT NOT NULL,
+                        ingredientes TEXT NOT NULL,
+                        categoryId TEXT NOT NULL,
+                        FOREIGN KEY(categoryId) REFERENCES categoria(id) ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                
+                // Crear índice para categoryId
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_producto_categoryId ON producto(categoryId)")
+            }
+        }
+        
         fun getDatabase(context: Context): AppDatabase {
             if (INSTANCE == null) {
                 synchronized(this) {
@@ -76,7 +117,7 @@ abstract class AppDatabase : RoomDatabase() {
                             AppDatabase::class.java,
                             "milsabores_database"
                         )
-                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                        .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_5_6)
                         .fallbackToDestructiveMigration() // Para desarrollo, permite recrear DB en cambios de versión
                         .build()
                         
@@ -84,7 +125,7 @@ abstract class AppDatabase : RoomDatabase() {
                         
                         // Insertar datos por defecto después de construir la base de datos
                         CoroutineScope(Dispatchers.IO).launch {
-                            insertarDatosPorDefecto(database)
+                            insertarDatosPorDefecto(database, context.applicationContext)
                         }
                     }
                 }
@@ -92,34 +133,80 @@ abstract class AppDatabase : RoomDatabase() {
             return INSTANCE!!
         }
         
-        private suspend fun insertarDatosPorDefecto(db: AppDatabase) {
+        private suspend fun insertarDatosPorDefecto(db: AppDatabase, context: Context) {
             val userDao = db.userDao()
+            val categoryDao = db.categoryDao()
+            val productDao = db.productDao()
             
             // Verificar si ya existen usuarios para no duplicar
             val usuariosExistentes = userDao.obtenerTodos()
-            if (usuariosExistentes.isNotEmpty()) {
-                return // Ya hay usuarios, no insertar de nuevo
+            if (usuariosExistentes.isEmpty()) {
+                val usuarios = listOf(
+                    UserEntity(
+                        nombre = "Admin Mil Sabores",
+                        email = "admin@milsabores.com",
+                        contrasena = "123456"
+                    ),
+                    UserEntity(
+                        nombre = "Cliente Demo",
+                        email = "cliente@milsabores.com",
+                        contrasena = "123456"
+                    ),
+                    UserEntity(
+                        nombre = "Usuario Test",
+                        email = "test@milsabores.com",
+                        contrasena = "123456"
+                    )
+                )
+                
+                usuarios.forEach { userDao.insertar(it) }
             }
             
-            val usuarios = listOf(
-                UserEntity(
-                    nombre = "Admin Mil Sabores",
-                    email = "admin@milsabores.com",
-                    contrasena = "123456"
-                ),
-                UserEntity(
-                    nombre = "Cliente Demo",
-                    email = "cliente@milsabores.com",
-                    contrasena = "123456"
-                ),
-                UserEntity(
-                    nombre = "Usuario Test",
-                    email = "test@milsabores.com",
-                    contrasena = "123456"
-                )
-            )
-            
-            usuarios.forEach { userDao.insertar(it) }
+            // Verificar si ya existen categorías para no duplicar
+            val categoriasExistentes = categoryDao.contar()
+            if (categoriasExistentes == 0) {
+                // Cargar productos y categorías desde JSON
+                val jsonDataSource = ProductJsonDataSource(context)
+                
+                try {
+                    val productosData = jsonDataSource.getProductosData().getOrNull()
+                    if (productosData != null) {
+                        // Insertar categorías
+                        val categorias = productosData.categorias.map { (id, categoryDto) ->
+                            CategoryEntity(
+                                id = id,
+                                nombre = categoryDto.nombre,
+                                icono = categoryDto.icono
+                            )
+                        }
+                        categoryDao.insertarTodas(categorias)
+                        
+                        // Insertar productos
+                        val productos = productosData.categorias.flatMap { (categoryId, categoryDto) ->
+                            categoryDto.productos.map { productDto ->
+                                ProductEntity(
+                                    id = productDto.id,
+                                    nombre = productDto.nombre,
+                                    precio = productDto.precio,
+                                    imagen = productDto.imagen,
+                                    descripcion = productDto.descripcion,
+                                    descripcionDetallada = productDto.descripcionDetallada,
+                                    rating = productDto.rating,
+                                    reviews = productDto.reviews,
+                                    porciones = productDto.porciones,
+                                    calorias = productDto.calorias,
+                                    ingredientes = productDto.ingredientes,
+                                    categoryId = categoryId
+                                )
+                            }
+                        }
+                        productDao.insertarTodos(productos)
+                    }
+                } catch (e: Exception) {
+                    // Error al cargar productos desde JSON, continuar sin ellos
+                    // Los productos se pueden cargar más tarde
+                }
+            }
         }
     }
 }

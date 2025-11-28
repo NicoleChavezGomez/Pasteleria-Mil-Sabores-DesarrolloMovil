@@ -33,8 +33,9 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     private val cartDao = database.cartDao()
     private val cartRepository: CartRepository = CartRepositoryImpl(cartDao)
     
-    private val productDataSource = ProductJsonDataSource(application)
-    private val productRepository: ProductRepository = ProductRepositoryImpl(productDataSource)
+    private val categoryDao = database.categoryDao()
+    private val productDao = database.productDao()
+    private val productRepository: ProductRepository = ProductRepositoryImpl(categoryDao, productDao, application)
     
     // Necesitamos AuthViewModel para obtener userId
     // Por ahora usamos un StateFlow para userId que se actualizará desde fuera

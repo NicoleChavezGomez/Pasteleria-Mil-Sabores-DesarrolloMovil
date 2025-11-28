@@ -16,7 +16,7 @@ Configuración base del proyecto Android con Jetpack Compose, estructura de carp
 
 **Checklist:**
 - [x] Crear proyecto Android con Compose
-- [x] Configurar dependencias básicas (Compose, Navigation, Hilt, Room, Coil)
+- [x] Configurar dependencias básicas (Compose, Navigation, Room, Coil)
 - [x] Establecer estructura de carpetas (data, domain, presentation)
 - [x] Configurar build.gradle.kts con versiones correctas
 - [x] Configurar AndroidManifest.xml con permisos necesarios
@@ -29,26 +29,23 @@ Configuración base del proyecto Android con Jetpack Compose, estructura de carp
 **Notas técnicas:**
 - Proyecto configurado con Material 3 Design
 - Compose BOM para gestión de versiones
-- Hilt para inyección de dependencias
+- Gestión manual de dependencias (sin inyección de dependencias)
 
 ---
 
-### 🏗️ Tarjeta 2: Arquitectura MVVM y Hilt
-**Etiquetas**: `✅ Done` `🏗️ Arquitectura` `💉 Hilt`
+### 🏗️ Tarjeta 2: Arquitectura MVVM
+**Etiquetas**: `✅ Done` `🏗️ Arquitectura`
 
 **Descripción:**
-Implementación de arquitectura MVVM con separación de capas y configuración de inyección de dependencias con Hilt.
+Implementación de arquitectura MVVM con separación de capas y gestión manual de dependencias.
 
 **Checklist:**
 - [x] Implementar separación de capas (data, domain, presentation)
 - [x] Crear ViewModels para gestión de estado
 - [x] Crear Repositorios para acceso a datos
-- [x] Configurar AppModule con Hilt
-- [x] Inyectar dependencias en ViewModels y repositorios
-- [x] Configurar @HiltAndroidApp en Application
+- [x] Configurar gestión manual de dependencias en ViewModels y repositorios
 
 **Archivos principales:**
-- `di/AppModule.kt`
 - `presentation/viewmodel/` (AuthViewModel, CartViewModel, etc.)
 - `data/repository/` (CartRepositoryImpl, ProductRepositoryImpl, etc.)
 - `domain/repository/` (interfaces)
@@ -56,7 +53,7 @@ Implementación de arquitectura MVVM con separación de capas y configuración d
 **Notas técnicas:**
 - MVVM con StateFlow para estado reactivo
 - Repositorios como capa de abstracción
-- Hilt simplifica gestión de dependencias
+- Gestión manual de dependencias en ViewModels (AndroidViewModel)
 
 ---
 
@@ -417,7 +414,7 @@ Migrar productos y categorías desde archivo JSON (assets) a Room Database para 
 - [ ] Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
 - [ ] Crear migración para nuevas tablas (MIGRATION_5_6)
 - [ ] Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON
-- [ ] Actualizar AppModule para inyectar CategoryDao y ProductDao
+- [ ] Actualizar ProductRepositoryImpl para usar CategoryDao y ProductDao directamente
 - [ ] Eliminar o deprecar ProductJsonDataSource
 
 **Archivos a crear/modificar:**
@@ -429,7 +426,6 @@ Migrar productos y categorías desde archivo JSON (assets) a Room Database para 
 - `data/mapper/ProductMapper.kt` (modificar)
 - `data/local/database/AppDatabase.kt` (modificar)
 - `data/repository/ProductRepositoryImpl.kt` (modificar)
-- `di/AppModule.kt` (modificar)
 
 **Notas técnicas:**
 - Usar misma metodología que usuarios por defecto

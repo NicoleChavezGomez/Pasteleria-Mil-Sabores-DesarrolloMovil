@@ -41,5 +41,8 @@ interface ProductDao {
     
     @Query("SELECT COUNT(*) FROM producto")
     suspend fun contar(): Int
+    
+    @Query("SELECT COUNT(*) FROM producto WHERE categoryId = :categoryId")
+    suspend fun contarPorCategoria(categoryId: String): Int
 }
 

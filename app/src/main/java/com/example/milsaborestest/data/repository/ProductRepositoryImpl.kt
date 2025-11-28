@@ -17,7 +17,16 @@ class ProductRepositoryImpl(
     
     override suspend fun getCategories(): List<Category> {
         val categoryEntities = categoryDao.obtenerTodasSuspend()
-        return categoryEntities.map { it.toDomain() }
+        return categoryEntities.map { categoryEntity ->
+            // Cargar productos para cada categoría
+            val productos = getProductsByCategory(categoryEntity.id)
+            Category(
+                id = categoryEntity.id,
+                nombre = categoryEntity.nombre,
+                icono = categoryEntity.icono,
+                productos = productos
+            )
+        }
     }
     
     override suspend fun getProductsByCategory(categoryId: String): List<Product> {

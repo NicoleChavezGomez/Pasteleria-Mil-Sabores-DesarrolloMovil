@@ -121,7 +121,13 @@ fun HomeScreen(navController: NavHostController) {
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = { navController.navigate(Screen.Products.createRoute()) }) {
+                Button(
+                    onClick = { navController.navigate(Screen.Products.createRoute()) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
                     Text("Ver todos")
                 }
             }

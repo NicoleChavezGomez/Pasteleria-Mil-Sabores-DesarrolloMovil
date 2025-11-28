@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,7 +52,9 @@ fun PurchaseHistoryScreen(
     // Cargar historial cuando se monta la pantalla
     LaunchedEffect(user) {
         user?.let { currentUser ->
-            purchaseViewModel.obtenerHistorialCompras(currentUser.id)
+            currentUser.id.toIntOrNull()?.let { userId ->
+                purchaseViewModel.obtenerHistorialCompras(userId)
+            }
         }
     }
     
@@ -143,7 +146,6 @@ private fun PurchaseHistoryList(
                 purchase = purchase,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .animateItemPlacement()
             )
         }
     }
@@ -238,9 +240,7 @@ private fun PurchaseCard(
                     Icon(
                         imageVector = Icons.Default.ExpandMore,
                         contentDescription = if (expanded) "Ocultar detalles" else "Ver detalles",
-                        modifier = Modifier.graphicsLayer {
-                            rotationZ = rotationAngle
-                        }
+                        modifier = Modifier.rotate(rotationAngle)
                     )
                 }
             }

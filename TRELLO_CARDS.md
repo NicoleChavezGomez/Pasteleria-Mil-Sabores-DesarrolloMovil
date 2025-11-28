@@ -61,28 +61,32 @@ Implementación de arquitectura MVVM con separación de capas y gestión manual 
 **Etiquetas**: `✅ Done` `💾 Database` `🗄️ Room`
 
 **Descripción:**
-Implementación de Room Database para persistencia local con entidades, DAOs y migraciones.
+Implementación de Room Database para persistencia local con entidades, DAOs y datos por defecto.
 
 **Checklist:**
 - [x] Configurar AppDatabase con Room
 - [x] Crear UserEntity y UserDao (autenticación)
 - [x] Crear CartEntity y CartDao (carrito de compras)
-- [x] Crear PurchaseEntity y PurchaseItemEntity (compras)
-- [x] Implementar migraciones (MIGRATION_2_3, MIGRATION_3_4)
-- [x] Configurar datos por defecto (usuarios iniciales)
+- [x] Crear CategoryEntity y CategoryDao (categorías de productos)
+- [x] Crear ProductEntity y ProductDao (productos)
+- [x] Configurar fallbackToDestructiveMigration para desarrollo
+- [x] Configurar datos por defecto (usuarios, categorías y productos)
 - [x] Asociar carrito a usuarios (userId en CartEntity con ForeignKey)
+- [x] Asociar productos a categorías (categoryId en ProductEntity con ForeignKey)
 
 **Archivos principales:**
 - `data/local/database/AppDatabase.kt`
 - `data/local/database/UserEntity.kt`, `UserDao.kt`
 - `data/local/database/CartEntity.kt`, `CartDao.kt`
-- `data/local/database/PurchaseEntity.kt`, `PurchaseItemEntity.kt`, `PurchaseDao.kt`
+- `data/local/database/CategoryEntity.kt`, `CategoryDao.kt`
+- `data/local/database/ProductEntity.kt`, `ProductDao.kt`
 
 **Notas técnicas:**
-- Versión actual de BD: 5
-- Migraciones con fallbackToDestructiveMigration para desarrollo
+- Versión actual de BD: 2
+- Usa fallbackToDestructiveMigration() para simplificar desarrollo
 - Foreign Keys configuradas con CASCADE DELETE
 - Carrito asociado a usuarios (userId en CartEntity)
+- Productos y categorías cargados directamente en base de datos (no desde JSON)
 
 ---
 
@@ -224,7 +228,7 @@ Implementación de todas las pantallas principales de la aplicación con sus fun
 - [x] HomeScreen (carousel de productos, categorías, grid de productos)
 - [x] AllProductsScreen (lista de productos, filtrado por categoría, búsqueda)
 - [x] ProductDetailScreen (detalle completo, imágenes, información, agregar al carrito)
-- [x] CartScreen (lista de items, controles de cantidad, total, checkout)
+- [x] CartScreen (lista de items, controles de cantidad, total)
 - [x] AccountScreen (información de usuario, foto de perfil, opciones)
 - [x] LoginScreen (formulario, validaciones, retroalimentación)
 - [x] RegisterScreen (formulario, validaciones, creación de usuario)
@@ -304,39 +308,6 @@ Sistema completo de animaciones para mejorar la experiencia de usuario: transici
 
 ---
 
-### 💳 Tarjeta 11: Checkout e Historial de Compras
-**Etiquetas**: `✅ Done` `💳 Checkout` `📋 Historial`
-
-**Descripción:**
-Sistema completo de checkout y historial de compras con persistencia en Room Database.
-
-**Checklist:**
-- [x] Crear PurchaseEntity y PurchaseItemEntity (entidades Room)
-- [x] Crear PurchaseDao con queries necesarias
-- [x] Crear modelos de dominio Purchase y PurchaseItem
-- [x] Implementar PurchaseViewModel (realizarCompra, obtenerHistorialCompras)
-- [x] Implementar función de checkout en CartScreen
-- [x] Crear PurchaseHistoryScreen con lista de compras
-- [x] Mostrar items de compra expandibles con animaciones
-- [x] Validaciones de checkout (autenticación, carrito no vacío)
-- [x] Diálogo de éxito después de compra
-- [x] Navegación a historial desde drawer y después de compra
-- [x] Migración MIGRATION_3_4 para tablas de compras
-
-**Archivos principales:**
-- `data/local/database/PurchaseEntity.kt`, `PurchaseItemEntity.kt`, `PurchaseDao.kt`
-- `domain/model/Purchase.kt`, `PurchaseItem.kt`
-- `presentation/viewmodel/PurchaseViewModel.kt`
-- `presentation/ui/screens/purchasehistory/PurchaseHistoryScreen.kt`
-- `presentation/ui/screens/cart/CartScreen.kt` (checkout)
-
-**Notas técnicas:**
-- PurchaseEntity con ForeignKey a UserEntity
-- PurchaseItemEntity con snapshot de productos al momento de compra
-- Historial ordenado por fecha descendente
-- Items expandibles con animaciones de rotación
-
----
 
 ### 🎨 Tarjeta 12: Mejoras de UI/UX
 **Etiquetas**: `✅ Done` `🎨 UI/UX` `✨ Mejoras`
@@ -398,42 +369,40 @@ Documentación del proyecto y configuración de control de versiones con Git y G
 
 ## 🔵 BACKLOG (Pendientes)
 
-### 🔄 Tarjeta 14: Migración de Productos de JSON a Room Database
-**Etiquetas**: `🔵 Backlog` `💾 Database` `📦 Productos` `🔴 Prioridad Alta`
+### 📦 Tarjeta 14: Migración de Productos de JSON a Room Database
+**Etiquetas**: `✅ Done` `💾 Database` `📦 Productos`
 
 **Descripción:**
-Migrar productos y categorías desde archivo JSON (assets) a Room Database para mejorar rendimiento y permitir funcionalidades avanzadas.
+Migración completa de productos y categorías desde archivo JSON (assets) a Room Database. Todos los datos ahora se cargan desde la base de datos local.
 
 **Checklist:**
-- [ ] Crear CategoryEntity para categorías en base de datos
-- [ ] Crear ProductEntity para productos en base de datos
-- [ ] Crear CategoryDao con queries necesarias (obtenerTodas, obtenerPorId, insertar)
-- [ ] Crear ProductDao con queries necesarias (obtenerTodos, obtenerPorId, obtenerPorCategoria, buscar)
-- [ ] Crear mappers para convertir entre Entity y Domain (CategoryMapper, ProductMapper)
-- [ ] Implementar carga de productos y categorías default desde JSON en insertarDatosPorDefecto()
-- [ ] Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
-- [ ] Crear migración para nuevas tablas (MIGRATION_5_6)
-- [ ] Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON
-- [ ] Actualizar ProductRepositoryImpl para usar CategoryDao y ProductDao directamente
-- [ ] Eliminar o deprecar ProductJsonDataSource
+- [x] Crear CategoryEntity para categorías en base de datos
+- [x] Crear ProductEntity para productos en base de datos
+- [x] Crear CategoryDao con queries necesarias (obtenerTodasSuspend, insertar, insertarTodas, contar)
+- [x] Crear ProductDao con queries necesarias (obtenerTodosSuspend, obtenerPorId, obtenerPorCategoriaSuspend, insertar, insertarTodos)
+- [x] Crear mappers para convertir entre Entity y Domain (CategoryMapper, ProductMapper)
+- [x] Implementar carga de productos y categorías default directamente en insertarDatosPorDefecto()
+- [x] Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
+- [x] Actualizar ProductRepositoryImpl para usar CategoryDao y ProductDao directamente
+- [x] Eliminar ProductJsonDataSource (ya no se usa)
+- [x] Eliminar DTOs obsoletos (ProductDto, CategoryDto, ProductosResponseDto)
 
-**Archivos a crear/modificar:**
-- `data/local/database/CategoryEntity.kt` (nuevo)
-- `data/local/database/ProductEntity.kt` (nuevo)
-- `data/local/database/CategoryDao.kt` (nuevo)
-- `data/local/database/ProductDao.kt` (nuevo)
-- `data/mapper/CategoryMapper.kt` (nuevo)
-- `data/mapper/ProductMapper.kt` (modificar)
-- `data/local/database/AppDatabase.kt` (modificar)
-- `data/repository/ProductRepositoryImpl.kt` (modificar)
+**Archivos creados/modificados:**
+- `data/local/database/CategoryEntity.kt` ✅
+- `data/local/database/ProductEntity.kt` ✅
+- `data/local/database/CategoryDao.kt` ✅
+- `data/local/database/ProductDao.kt` ✅
+- `data/mapper/CategoryMapper.kt` ✅
+- `data/mapper/ProductMapper.kt` ✅ (actualizado)
+- `data/local/database/AppDatabase.kt` ✅ (actualizado)
+- `data/repository/ProductRepositoryImpl.kt` ✅ (actualizado)
 
 **Notas técnicas:**
-- Usar misma metodología que usuarios por defecto
-- Verificar existencia antes de insertar para evitar duplicados
-- Mantener compatibilidad con estructura actual
-- Foreign Key de ProductEntity a CategoryEntity
-
-**Prioridad:** 🔴 Alta - Mejora rendimiento y permite funcionalidades avanzadas
+- Productos y categorías cargados directamente en base de datos (hardcoded en insertarDatosPorDefecto)
+- Foreign Key de ProductEntity a CategoryEntity configurada
+- ProductRepositoryImpl ahora usa DAOs en lugar de JSON
+- Código simplificado: eliminado ProductJsonDataSource y DTOs obsoletos
+- Base de datos versión 2 con fallbackToDestructiveMigration()
 
 ---
 
@@ -468,35 +437,51 @@ Verificar y documentar planificación en Trello según requisitos de la rúbrica
 
 | Estado | Cantidad | Porcentaje |
 |--------|----------|------------|
-| 🟢 Done | 13 | ~87% |
-| 🔵 Backlog | 2 | ~13% |
+| 🟢 Done | 14 | ~93% |
+| 🔵 Backlog | 1 | ~7% |
 | **TOTAL** | **15** | **100%** |
 
 ### 📈 Progreso General
 
-- **Tarjetas Completadas**: 13/15 (87%)
-- **Tarjetas Pendientes**: 2/15 (13%)
+- **Tarjetas Completadas**: 14/15 (93%)
+- **Tarjetas Pendientes**: 1/15 (7%)
 - **Funcionalidades Críticas**: ✅ Completadas
 - **Recursos Nativos**: ✅ Completados (Notificaciones + Galería)
-- **Checkout e Historial**: ✅ Completado
+- **Migración de Productos a Room**: ✅ Completada
 - **Carrito por Usuario**: ✅ Completado
+- **Limpieza de Código**: ✅ Completada (eliminado código sin usar)
 
 ---
 
 ## 🎯 Próximas Acciones
 
-1. **Migración de Productos a Room Database** (Tarjeta #14)
-   - Contexto: Productos actualmente se cargan desde JSON
-   - Impacto: Mejora rendimiento y permite funcionalidades avanzadas
-   - Prioridad: 🔴 Alta
-
-2. **Planificación en Trello** (Tarjeta #15)
+1. **Planificación en Trello** (Tarjeta #15)
    - Contexto: Requisito de la rúbrica
    - Impacto: Mejora nota en planificación
    - Prioridad: 🟡 Importante
 
 ---
 
-**Última actualización**: 28-11-2025  
+## 🧹 Limpieza de Código Completada
+
+**Eliminaciones realizadas:**
+- ✅ ProductJsonDataSource.kt (ya no se usa, productos en Room)
+- ✅ Resource.kt (reemplazado por UiState)
+- ✅ ProductDto.kt, CategoryDto.kt, ProductosResponseDto.kt (DTOs obsoletos)
+- ✅ Sistema de reviews eliminado (no necesario)
+- ✅ Sistema de compras eliminado (solo carrito)
+- ✅ Dependencias sin usar: Retrofit, OkHttp, Gson
+- ✅ Métodos sin usar en DAOs (Flow methods, métodos de búsqueda no utilizados)
+- ✅ Opción REVIEWS_DESC eliminada de filtros
+
+**Arquitectura actualizada:**
+- ✅ Sin Hilt (gestión manual de dependencias)
+- ✅ Room Database simplificado (fallbackToDestructiveMigration)
+- ✅ Productos y categorías en Room Database
+- ✅ Código limpio y optimizado
+
+---
+
+**Última actualización**: Diciembre 2025  
 **Formato**: Tarjetas de Trello con checklists y descripciones detalladas
 

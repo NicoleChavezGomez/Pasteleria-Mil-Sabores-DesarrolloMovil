@@ -42,15 +42,23 @@ La aplicación está desarrollada siguiendo las mejores prácticas de Android, u
 - Cálculo automático de totales
 - Persistencia en base de datos local
 - Contador de items en tiempo real
+- Carrito asociado a usuarios (cada usuario tiene su propio carrito)
 
 ### 🎨 Interfaz de Usuario
 
 - **Material 3 Design**: Implementación completa de Material Design 3
 - **Bottom Navigation Bar**: Navegación principal entre secciones
-- **Navigation Drawer**: Menú lateral con opciones adicionales
-- **Top Navigation Bar**: Barra superior con logo, carrito y menú
-- **Animaciones**: Shimmer effects en carga de datos y carousel de productos
+- **Navigation Drawer**: Menú lateral con opciones adicionales (ancho 75%)
+- **Top Navigation Bar**: Barra superior con logo, carrito y menú hamburger
+- **Animaciones**: Shimmer effects, transiciones suaves, animaciones de feedback
 - **Tema personalizado**: Colores y tipografía adaptados a la marca
+- **Splash Screen**: Pantalla inicial con logo y animación
+
+### 📱 Recursos Nativos
+
+- **Notificaciones**: Sistema de notificaciones para recordar carrito abandonado
+- **Galería**: Selección de foto de perfil desde galería (Photo Picker)
+- **Imágenes por defecto**: Manejo de errores con imágenes por defecto en todos los componentes
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -65,8 +73,8 @@ La aplicación está desarrollada siguiendo las mejores prácticas de Android, u
 - **Coroutines**: Programación asíncrona
 
 ### Persistencia de Datos
-- **Room Database**: Base de datos local para usuarios y carrito
-- **JSON Assets**: Datos de productos desde archivos JSON
+- **Room Database**: Base de datos local para usuarios, carrito, categorías y productos
+- **Datos por defecto**: Productos y categorías cargados directamente en base de datos
 
 ### Navegación
 - **Navigation Compose**: Sistema de navegación entre pantallas
@@ -83,6 +91,7 @@ La aplicación está desarrollada siguiendo las mejores prácticas de Android, u
 - androidx.compose.ui:ui
 - androidx.compose.material3:material3
 - androidx.compose.ui:ui-tooling-preview
+- androidx.compose.material:material-icons-extended
 
 // Navigation
 - androidx.navigation:navigation-compose
@@ -94,6 +103,13 @@ La aplicación está desarrollada siguiendo las mejores prácticas de Android, u
 
 // Coroutines
 - org.jetbrains.kotlinx:kotlinx-coroutines-android
+- org.jetbrains.kotlinx:kotlinx-coroutines-core
+
+// Image Loading
+- io.coil-kt:coil-compose
+
+// DataStore
+- androidx.datastore:datastore-preferences
 ```
 
 ## 📋 Requisitos del Sistema
@@ -165,9 +181,9 @@ app/
 │   │   ├── java/com/example/milsaborestest/
 │   │   │   ├── data/
 │   │   │   │   ├── local/
-│   │   │   │   │   ├── database/          # Room Database (Entities, DAOs)
-│   │   │   │   │   └── datasource/        # DataSources (JSON, etc.)
-│   │   │   │   └── repository/            # Implementaciones de repositorios
+│   │   │   │   │   └── database/          # Room Database (Entities, DAOs)
+│   │   │   │   ├── mapper/                 # Mappers (Entity ↔ Domain)
+│   │   │   │   └── repository/             # Implementaciones de repositorios
 │   │   │   ├── domain/
 │   │   │   │   ├── model/                 # Modelos de dominio
 │   │   │   │   └── usecase/               # Casos de uso
@@ -178,12 +194,11 @@ app/
 │   │   │   │   │   ├── components/        # Componentes reutilizables
 │   │   │   │   │   └── theme/             # Tema y estilos
 │   │   │   │   └── viewmodel/             # ViewModels
-│   │   │   ├── util/                      # Utilidades y helpers
+│   │   │   ├── util/                      # Utilidades y helpers (NotificationHelper, ImageHelper)
 │   │   │   └── MainActivity.kt            # Actividad principal
 │   │   ├── res/
 │   │   │   ├── drawable/                  # Imágenes y drawables
-│   │   │   ├── values/                    # Colores, strings, themes
-│   │   │   └── assets/                    # Archivos JSON (productos)
+│   │   │   └── values/                    # Colores, strings, themes
 │   │   └── AndroidManifest.xml
 │   └── test/                              # Tests unitarios
 ```
@@ -194,21 +209,28 @@ app/
 
 La aplicación utiliza Room Database para persistencia local:
 - **Base de datos**: `milsabores_database`
-- **Entidades**: `UserEntity`, `CartEntity`
+- **Entidades**: `UserEntity`, `CartEntity`, `CategoryEntity`, `ProductEntity`
 - **Versión actual**: 2
+- **Migraciones**: Usa `fallbackToDestructiveMigration()` para desarrollo
+- **Datos por defecto**: Usuarios, categorías y productos cargados automáticamente al iniciar
 
 ### Permisos
 
 La aplicación requiere los siguientes permisos:
+- `POST_NOTIFICATIONS`: Para mostrar notificaciones de carrito abandonado (Android 13+)
 - `INTERNET`: Para futuras integraciones con API
 - `ACCESS_NETWORK_STATE`: Para verificar conectividad
 
+**Nota**: El Photo Picker moderno no requiere permisos explícitos de almacenamiento.
+
 ## 📝 Notas de Desarrollo
 
-- El proyecto sigue el patrón de acceso directo a base de datos desde ViewModels 
-- Los productos se cargan desde un archivo JSON en `assets/productos.json`
-- La autenticación no persiste entre sesiones
-- El carrito se persiste en Room Database
+- **Arquitectura**: MVVM con gestión manual de dependencias (sin framework de DI)
+- **Base de datos**: Room Database con datos por defecto (usuarios, categorías y productos)
+- **Productos**: Cargados desde Room Database (no desde JSON)
+- **Autenticación**: Persiste entre sesiones en Room Database
+- **Carrito**: Persistido en Room Database, asociado a usuarios
+- **Recursos nativos**: Notificaciones (carrito abandonado) y Galería (foto de perfil)
 
 ## 🐛 Solución de Problemas
 

@@ -27,7 +27,7 @@ Tareas completadas y validadas.
 ### ✅ Arquitectura y Estructura Base
 - [x] **Configurar proyecto Android con Compose**
   - Configuración inicial del proyecto
-  - Dependencias básicas (Compose, Navigation, Hilt)
+  - Dependencias básicas (Compose, Navigation, Room, Coil)
   - Estructura de carpetas (data, domain, presentation)
 
 - [x] **Implementar arquitectura MVVM**
@@ -35,9 +35,9 @@ Tareas completadas y validadas.
   - ViewModels para gestión de estado
   - Repositorios para acceso a datos
 
-- [x] **Configurar inyección de dependencias (Hilt)**
-  - AppModule configurado
-  - Inyección en ViewModels y repositorios
+- [x] **Configurar gestión manual de dependencias**
+  - ViewModels y repositorios con constructores manuales
+  - Sin framework de inyección de dependencias (simplificado)
 
 ### ✅ Base de Datos y Persistencia
 - [x] **Implementar Room Database**
@@ -65,9 +65,9 @@ Tareas completadas y validadas.
 
 - [x] **Sistema de persistencia general**
   - Room Database configurado como solución de persistencia local
-  - Datos persistentes: Usuarios (UserEntity), Carrito (CartEntity)
-  - Migraciones de base de datos implementadas y configuradas
-  - Datos no persistentes: Productos (cargados desde JSON en assets)
+  - Datos persistentes: Usuarios (UserEntity), Carrito (CartEntity), Categorías (CategoryEntity), Productos (ProductEntity)
+  - Base de datos versión 2 con fallbackToDestructiveMigration()
+  - Productos y categorías cargados directamente en base de datos (hardcoded en insertarDatosPorDefecto)
   - Estado de autenticación: Persistido en base de datos, se mantiene entre sesiones
   - Carrito de compras: Persistido en base de datos, se mantiene entre sesiones
 
@@ -745,133 +745,15 @@ Tareas completadas y validadas.
     - `AppModule.kt` - Actualizar inyección si se elimina
     - `ProductRepositoryImpl.kt` - Ya no usaría JSON para consultas
 
-#### 🛒 Checkout e Historial de Compras
-- [x] **Crear entidad PurchaseEntity/OrderEntity para compras** ✅ COMPLETADO
-  - **Contexto**: Necesitamos almacenar el historial de compras de los usuarios
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseEntity.kt`
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseItemEntity.kt`
-  - **Implementación**:
-    - ✅ `PurchaseEntity`: id (String UUID), userId (FK), fecha (ISO 8601), total, estado
-    - ✅ `PurchaseItemEntity`: id (autoincrement), purchaseId (FK), productId, nombre, precio, cantidad, imagen
-    - ✅ Tabla separada para items (más normalizado)
-    - ✅ Foreign Keys configuradas con CASCADE DELETE
-    - ✅ Snapshot de productos al momento de compra
-  - **Estado**: Implementado con tabla separada para mejor normalización
-
-- [x] **Crear PurchaseDao con queries necesarias** ✅ COMPLETADO
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/data/local/database/PurchaseDao.kt`
-  - **Queries implementadas**:
-    - ✅ `insertarCompra(purchase: PurchaseEntity): Long` - Insertar nueva compra
-    - ✅ `insertarItems(items: List<PurchaseItemEntity>)` - Insertar items de compra
-    - ✅ `obtenerComprasPorUsuario(userId: Int): List<PurchaseEntity>` - Obtener compras ordenadas por fecha DESC
-    - ✅ `obtenerCompraPorId(purchaseId: String): PurchaseEntity?` - Obtener compra específica
-    - ✅ `obtenerItemsPorCompra(purchaseId: String): List<PurchaseItemEntity>` - Obtener items de una compra
-    - ✅ `contarComprasPorUsuario(userId: Int): Int` - Estadística de compras
-    - ✅ `obtenerTotalGastadoPorUsuario(userId: Int): Int` - Total gastado por usuario
-  - **Estado**: Implementado con queries adicionales para estadísticas
-
-- [x] **Crear modelo de dominio Purchase** ✅ COMPLETADO
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/domain/model/Purchase.kt`
-  - **Implementación**:
-    - ✅ `Purchase`: id, userId, fecha, total, estado, items (List<PurchaseItem>)
-    - ✅ `PurchaseItem`: id, productId, nombre, precio, cantidad, imagen
-    - ✅ Propiedad calculada `subtotal` en PurchaseItem (precio * cantidad)
-  - **Mapper**: Conversión implementada directamente en PurchaseViewModel
-  - **Estado**: Modelos de dominio completos con documentación
-
-- [x] **Implementar PurchaseViewModel para gestionar compras** ✅ COMPLETADO
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/presentation/viewmodel/PurchaseViewModel.kt`
-  - **Funcionalidades implementadas**:
-    - ✅ `StateFlow<List<Purchase>>` - purchaseHistory
-    - ✅ `StateFlow<Purchase?>` - currentPurchase
-    - ✅ `StateFlow<Boolean>` - isLoading
-    - ✅ `StateFlow<String?>` - message
-    - ✅ `realizarCompra(cartItems: List<CartItem>, userId: Int): String?` - Checkout completo
-    - ✅ `obtenerHistorialCompras(userId: Int)` - Cargar historial con items
-    - ✅ `obtenerCompraPorId(purchaseId: String)` - Obtener compra específica
-    - ✅ `formatearFecha()` - Formato legible de fechas (ISO -> "dd MMM yyyy, HH:mm")
-  - **Lógica de checkout implementada**:
-    - ✅ Validación de carrito vacío
-    - ✅ Generación de UUID para ID de compra
-    - ✅ Cálculo de total automático
-    - ✅ Creación de PurchaseEntity y PurchaseItemEntity
-    - ✅ Inserción en base de datos
-    - ✅ Manejo de errores con try-catch
-    - ✅ Estados de carga y mensajes
-  - **Estado**: ViewModel completo con todas las funcionalidades
-
-- [x] **Implementar función de checkout en CartViewModel o crear función separada** ✅ COMPLETADO
-  - **Contexto**: Simular el proceso de compra desde el carrito
-  - **Opción implementada**: Opción B - Función en `PurchaseViewModel` (separación de responsabilidades)
-  - **Flujo implementado**:
-    1. ✅ Usuario presiona botón "Comprar" en `CartScreen`
-    2. ✅ Validación de autenticación (si no está autenticado, muestra mensaje)
-    3. ✅ `CartScreen` llama a `PurchaseViewModel.realizarCompra(cartItems, userId)`
-    4. ✅ `PurchaseViewModel` crea PurchaseEntity y PurchaseItemEntity
-    5. ✅ Inserción en base de datos
-    6. ✅ `CartScreen` llama a `CartViewModel.clearCart()` después de compra exitosa
-    7. ✅ Diálogo de éxito con opciones de navegación
-    8. ✅ Navegación a historial o home
-  - **Estado**: Implementado con separación de responsabilidades
-
-- [x] **Crear pantalla de Historial de Compras (PurchaseHistoryScreen)** ✅ COMPLETADO
-  - **Archivo creado**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/purchasehistory/PurchaseHistoryScreen.kt`
-  - **Funcionalidades implementadas**:
-    - ✅ Lista de compras del usuario autenticado
-    - ✅ Ordenadas por fecha (más recientes primero)
-    - ✅ Información de cada compra: fecha, total, cantidad de items, estado
-    - ✅ Lista expandible de items con animaciones
-    - ✅ Imágenes de productos en items
-    - ✅ Cálculo de subtotales por item
-  - **UI implementada**:
-    - ✅ `LazyColumn` con `animateItemPlacement()`
-    - ✅ `PurchaseCard` con información resumida
-    - ✅ Botón expandir/colapsar con animación de rotación
-    - ✅ `StatusChip` con colores según estado
-    - ✅ Estado vacío con icono y mensaje
-    - ✅ Estado de carga con CircularProgressIndicator
-    - ✅ Manejo de usuario no autenticado
-  - **Integración**:
-    - ✅ PurchaseViewModel para datos
-    - ✅ AuthViewModel para usuario autenticado
-    - ✅ Ruta agregada en `Screen.kt` (Screen.PurchaseHistory)
-    - ✅ Ruta agregada en `AppNavigation.kt`
-    - ✅ Opción en NavigationDrawer (solo usuarios autenticados)
-  - **Estado**: Pantalla completa con animaciones y estados
-
-- [x] **Actualizar CartScreen con botón de checkout funcional** ✅ COMPLETADO
-  - **Archivo modificado**: `app/src/main/java/com/example/milsaborestest/presentation/ui/screens/cart/CartScreen.kt`
-  - **Modificaciones implementadas**:
-    - ✅ Función signature actualizada: recibe `AuthViewModel` y `PurchaseViewModel`
-    - ✅ Validación de autenticación antes de comprar
-    - ✅ Texto dinámico en botón: "Comprar" si autenticado, "Iniciar Sesión" si no
-    - ✅ Snackbar para mensajes de error/información
-    - ✅ Función `onCheckout` con lógica completa:
-      1. ✅ Validar autenticación (mensaje si no está autenticado)
-      2. ✅ Validar carrito no vacío
-      3. ✅ Llamar a `PurchaseViewModel.realizarCompra(cartItems, userId)`
-      4. ✅ Limpiar carrito con `CartViewModel.clearCart()` si exitoso
-      5. ✅ Mostrar diálogo de éxito con opciones de navegación
-    - ✅ Diálogo de éxito (`AlertDialog`) con:
-      - ✅ Icono de check animado
-      - ✅ Mensaje de confirmación
-      - ✅ Botón "Ver Historial" (navega a purchase_history)
-      - ✅ Botón "Volver al Inicio" (popBackStack)
-    - ✅ Botón deshabilitado si `isLoading` o carrito vacío
-    - ✅ CircularProgressIndicator en botón durante carga
-    - ✅ Scaffold con SnackbarHost para mensajes
-  - **Estado**: CartScreen completamente funcional con checkout
-
-- [x] **Crear entidades PurchaseEntity y PurchaseItemEntity con Room** ✅ COMPLETADO
-  - **Archivos creados**:
-    - `PurchaseEntity.kt` - Entidad con `@Entity`, `@ForeignKey` a UserEntity
-    - `PurchaseItemEntity.kt` - Entidad con `@Entity`, `@ForeignKey` a PurchaseEntity
-  - **Implementación**:
-    - ✅ Entidades creadas con anotaciones `@Entity` y `@ForeignKey`
-    - ✅ Agregadas a lista de entidades en `@Database`
-    - ✅ `purchaseDao()` agregado al AppDatabase
-    - ✅ Room crea las tablas automáticamente desde las entidades
-  - **Estado**: Completado
+#### 📦 Migración de Productos de JSON a Room Database
+- [x] **Migración completa de productos y categorías a Room Database** ✅ COMPLETADO
+  - CategoryEntity y ProductEntity creados
+  - CategoryDao y ProductDao implementados
+  - Productos y categorías cargados directamente en base de datos
+  - ProductRepositoryImpl actualizado para usar DAOs
+  - ProductJsonDataSource eliminado
+  - DTOs obsoletos eliminados (ProductDto, CategoryDto, ProductosResponseDto)
+  - Código limpio y optimizado
 
 - [x] **Asociar carrito de compras a usuarios (carrito por usuario)** ✅ COMPLETADO
   - **Contexto**: Actualmente el carrito es global. Cada usuario debe tener su propio carrito independiente.
@@ -883,7 +765,7 @@ Tareas completadas y validadas.
     - ✅ `CartViewModel.kt` - Tiene `setUserId(userId: Int?)` y usa `_currentUserId` para filtrar carrito por usuario
     - ✅ `AuthViewModel.kt` - Limpia carrito al hacer logout (línea 88-89)
     - ✅ `MainContent.kt` - Llama `cartViewModel.setUserId(userId)` cuando cambia el usuario (línea 68)
-    - ✅ `AppDatabase.kt` - Versión 5, CartEntity incluye userId con ForeignKey
+    - ✅ `AppDatabase.kt` - Versión 2, CartEntity incluye userId con ForeignKey
   - **Implementación verificada**:
     1. ✅ `CartEntity` tiene `userId: Int` con `@ForeignKey` a UserEntity
     2. ✅ `CartDao` tiene `userId` en todas las queries
@@ -893,8 +775,23 @@ Tareas completadas y validadas.
     6. ✅ `MainContent` sincroniza userId del usuario autenticado con CartViewModel
   - **Estado**: ✅ COMPLETADO - Carrito funciona correctamente por usuario
 
-#### ⭐ Sistema de Reseñas
-- [ ] **Crear entidad ReviewEntity para reseñas en base de datos**
+#### 🧹 Limpieza de Código
+- [x] **Eliminación de código sin usar** ✅ COMPLETADO
+  - ProductJsonDataSource.kt eliminado
+  - Resource.kt eliminado
+  - DTOs obsoletos eliminados (ProductDto, CategoryDto, ProductosResponseDto)
+  - Sistema de reviews eliminado (no necesario)
+  - Sistema de compras eliminado (solo carrito)
+  - Dependencias sin usar eliminadas (Retrofit, OkHttp, Gson)
+  - Métodos sin usar en DAOs eliminados
+  - Opción REVIEWS_DESC eliminada de filtros
+
+---
+
+#### ⚠️ Sistema de Reseñas - ELIMINADO
+**Nota**: El sistema de reseñas fue eliminado del proyecto por decisión del equipo. Las reseñas del JSON se mantienen como información estática en ProductDetailScreen.
+
+- [ ] ~~**Crear entidad ReviewEntity para reseñas en base de datos**~~ ❌ ELIMINADO
   - **Contexto**: Necesitamos almacenar reseñas de productos asociadas a usuarios, permitiendo que usuarios agreguen sus propias reseñas
   - **Archivo a crear**: `app/src/main/java/com/example/milsaborestest/data/local/database/ReviewEntity.kt`
   - **Campos sugeridos**:
@@ -1108,19 +1005,17 @@ Tareas completadas y validadas.
 ### 📈 Progreso para Evaluación
 
 **Tareas Críticas Completadas:**
-- ✅ Recursos Nativos: 12/13 tareas (92%) - **CASI COMPLETADO** (Notificaciones ✅✅, Galería ✅✅, solo falta imágenes por defecto en productos)
+- ✅ Recursos Nativos: 13/13 tareas (100%) - **COMPLETADO** (Notificaciones ✅, Galería ✅, Imágenes por defecto ✅)
 - ✅ README.md: 1/1 tarea (100%) - **COMPLETADO**
 - ✅ Animaciones: 4/4 tareas (100%) - **COMPLETADO** ✨
 - ✅ Splash Screen: 1/1 tarea (100%) - **COMPLETADO**
+- ✅ Migración de Productos (JSON → Room): 9/9 tareas (100%) - **COMPLETADO** ✅
+- ✅ Limpieza de Código: 1/1 tarea (100%) - **COMPLETADO** ✅
 
 **Tareas Críticas Pendientes:**
 - ❌ Trello: 0/1 tarea (0%) - **PENDIENTE**
-- ❌ Migración de Productos (JSON → Room): 0/9 tareas (0%) - **PENDIENTE**
-- ✅ Checkout e Historial de Compras: 9/9 tareas (100%) - **COMPLETADO** ✅
-- ❌ Sistema de Reseñas: Eliminado del proyecto
-- ⚠️ Imágenes por defecto en productos: 0/1 tarea (0%) - **PENDIENTE** (no crítico)
 
-**Total crítico pendiente: 28 tareas** (1 Trello + 9 Migración + 9 Checkout + 9 Reseñas)
+**Total crítico pendiente: 1 tarea** (Trello)
 
 ---
 
@@ -1302,35 +1197,30 @@ Tareas completadas y validadas.
    - ✅ FloatingActionButton para seleccionar foto de galería
    - ✅ Manejo de errores completo (muestra imagen por defecto en todos los casos)
 
-6. **Migración de Productos de JSON a Room Database**: ❌ PENDIENTE
-   - ❌ `CategoryEntity.kt` no existe (entidad para categorías)
-   - ❌ `ProductEntity.kt` no existe (entidad para productos)
-   - ❌ `CategoryDao.kt` no existe (DAO para categorías)
-   - ❌ `ProductDao.kt` no existe (DAO para productos)
-   - ❌ `CategoryMapper.kt` no existe (mapper para categorías)
-   - ❌ `ProductMapper.kt` no está actualizado para usar Entity (solo tiene mapper de DTO)
-   - ❌ `AppDatabase.kt` no tiene tablas `categorias` ni `productos`
-   - ❌ `AppDatabase.kt` no carga productos/categorías default desde JSON (solo carga usuarios)
-   - ❌ `ProductRepositoryImpl.kt` usa `ProductJsonDataSource` para todas las consultas (no usa DAO)
-   - ❌ `AppModule.kt` no inyecta `CategoryDao` ni `ProductDao`
-   - ⚠️ **Estado actual**: Productos se cargan completamente desde JSON (`productos.json` en assets)
-   - ⚠️ **Objetivo**: Migrar a Room Database usando misma metodología que usuarios por defecto
+6. **Migración de Productos de JSON a Room Database**: ✅ COMPLETADO
+   - ✅ `CategoryEntity.kt` creado (entidad para categorías)
+   - ✅ `ProductEntity.kt` creado (entidad para productos)
+   - ✅ `CategoryDao.kt` creado (DAO para categorías)
+   - ✅ `ProductDao.kt` creado (DAO para productos)
+   - ✅ `CategoryMapper.kt` creado (mapper para categorías)
+   - ✅ `ProductMapper.kt` actualizado para usar Entity
+   - ✅ `AppDatabase.kt` tiene tablas `categoria` y `producto`
+   - ✅ `AppDatabase.kt` carga productos/categorías default directamente (hardcoded)
+   - ✅ `ProductRepositoryImpl.kt` usa `CategoryDao` y `ProductDao` directamente
+   - ✅ `ProductJsonDataSource.kt` eliminado (ya no se usa)
+   - ✅ **Estado actual**: Productos se cargan desde Room Database
+   - ✅ **Objetivo**: Completado - Migración exitosa a Room Database
 
-7. **Checkout e Historial de Compras**: ✅ COMPLETADO
-   - ✅ `PurchaseEntity.kt` y `PurchaseItemEntity.kt` creados e implementados
-   - ✅ `PurchaseDao.kt` creado con todas las queries necesarias
-   - ✅ Modelos de dominio `Purchase.kt` y `PurchaseItem.kt` creados
-   - ✅ `PurchaseViewModel.kt` implementado con lógica de checkout y gestión de historial
-   - ✅ `PurchaseHistoryScreen.kt` creada con UI completa y animaciones
-   - ✅ `CartScreen.kt` actualizado con botón de checkout funcional y validaciones
-   - ✅ `AppDatabase.kt` actualizado con nuevas tablas y migración `MIGRATION_3_4`
-   - ✅ Funcionalidad de checkout simula compra, guarda en BD y limpia carrito
-   - ✅ Persistencia de historial de compras por usuario implementada
-   - ✅ Navegación integrada en `AppNavigation.kt` y `MainContent.kt` (Drawer)
-
-8. **Sistema de Reseñas**: ❌ ELIMINADO
-   - ⚠️ **Decisión**: No se implementará sistema de reseñas
-   - Las reseñas del JSON se mantienen como información estática en ProductDetailScreen
+7. **Limpieza de Código**: ✅ COMPLETADO
+   - ✅ ProductJsonDataSource.kt eliminado
+   - ✅ Resource.kt eliminado
+   - ✅ DTOs obsoletos eliminados (ProductDto, CategoryDto, ProductosResponseDto)
+   - ✅ Sistema de reviews eliminado (no necesario)
+   - ✅ Sistema de compras eliminado (solo carrito)
+   - ✅ Dependencias sin usar eliminadas (Retrofit, OkHttp, Gson)
+   - ✅ Métodos sin usar en DAOs eliminados
+   - ✅ Opción REVIEWS_DESC eliminada de filtros
+   - ✅ Código limpio y optimizado
 
 ---
 
@@ -1406,16 +1296,17 @@ Tareas completadas y validadas.
 41. ✅ Aumentar ancho del Sidebar de 50% a 75%
 42. ✅ Implementar pantalla de Splash con logo de Mil Sabores
 
-#### Checkout e Historial de Compras
-43. ✅ Crear entidad PurchaseEntity/OrderEntity para compras
-44. ✅ Crear PurchaseDao con queries necesarias
-45. ✅ Crear modelo de dominio Purchase
-46. ✅ Implementar PurchaseViewModel para gestionar compras
-47. ✅ Implementar función de checkout en PurchaseViewModel
-48. ✅ Crear pantalla de Historial de Compras (PurchaseHistoryScreen)
-49. ✅ Actualizar CartScreen con botón de checkout funcional
-50. ✅ Crear entidades PurchaseEntity y PurchaseItemEntity con Room
-51. ✅ Asociar carrito de compras a usuarios (carrito por usuario)
+#### Migración de Productos a Room Database
+43. ✅ Crear CategoryEntity para categorías en base de datos
+44. ✅ Crear ProductEntity para productos en base de datos
+45. ✅ Crear CategoryDao con queries necesarias
+46. ✅ Crear ProductDao con queries necesarias
+47. ✅ Crear mappers para convertir entre Entity y Domain
+48. ✅ Implementar carga de productos y categorías default en insertarDatosPorDefecto()
+49. ✅ Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
+50. ✅ Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON
+51. ✅ Eliminar ProductJsonDataSource y DTOs obsoletos
+52. ✅ Asociar carrito de compras a usuarios (carrito por usuario)
 
 ---
 
@@ -1442,8 +1333,6 @@ Tareas completadas y validadas.
 61. ❌ Actualizar AppModule para inyectar nuevos DAOs
 62. ❌ Eliminar o deprecar ProductJsonDataSource
 
-#### Checkout e Historial de Compras
-~~63. ❌ Asociar carrito de compras a usuarios (carrito por usuario)~~ ✅ **COMPLETADO** (Movido a tarea #51)
 
 #### Planificación y Documentación
 73. ❌ Verificar y documentar Trello
@@ -1473,17 +1362,10 @@ Tareas completadas y validadas.
 
 ### 🎯 PRÓXIMAS ACCIONES PRIORITARIAS
 
-1. ~~**Asociar carrito de compras a usuarios** (Tarea #51)~~ ✅ **COMPLETADO**
-   - ~~Contexto: Actualmente el carrito es global, debe ser por usuario~~
-   - ~~Impacto: Funcionalidad crítica para multi-usuario~~
-
-2. **Migración de Productos a Room Database** (Tareas #53-62)
-   - Contexto: Productos actualmente se cargan desde JSON
-   - Impacto: Mejora rendimiento y permite funcionalidades avanzadas
-
-3. **Verificar y documentar Trello** (Tarea #73)
+1. **Verificar y documentar Trello** (Tarea pendiente)
    - Contexto: Requisito de la rúbrica
    - Impacto: Mejora nota en planificación
+   - Prioridad: 🟡 Importante
 
 ---
 
@@ -1500,15 +1382,14 @@ Tareas completadas y validadas.
   - MainContent sincroniza userId con CartViewModel
   - AuthViewModel limpia carrito en logout()
 
-**Tareas verificadas como PENDIENTES:**
-- ❌ **Edición de datos de usuario**: AuthViewModel solo tiene `updateProfilePhoto()`, no tiene `updateUserData(name, email)`
-- ❌ **ReusableTextField y ReusableText**: No existen en codebase (fueron eliminados)
-- ❌ **Migración de Productos a Room**: CategoryEntity, ProductEntity, CategoryDao, ProductDao no existen
-- ❌ **Sistema de Reseñas**: Eliminado del proyecto (no se implementará)
+**Tareas verificadas como COMPLETADAS:**
+- ✅ **Migración de Productos a Room**: CategoryEntity, ProductEntity, CategoryDao, ProductDao existen y funcionan
+- ✅ **Limpieza de Código**: ProductJsonDataSource, Resource, DTOs obsoletos eliminados
+- ✅ **Sistema de Reseñas**: Eliminado del proyecto (decisión del equipo)
+- ✅ **Sistema de Compras**: Eliminado del proyecto (solo carrito)
 
-**Funcionalidades de compra verificadas:**
-- ✅ PurchaseEntity, PurchaseItemEntity existen y están en AppDatabase
-- ✅ PurchaseViewModel existe y está activo
-- ✅ PurchaseHistoryScreen existe y está en AppNavigation
-- ✅ CartScreen tiene checkout funcional con PurchaseViewModel
-- ✅ MainContent tiene navegación a PurchaseHistory en drawer
+**Funcionalidades actuales verificadas:**
+- ✅ Productos y categorías cargados desde Room Database
+- ✅ ProductRepositoryImpl usa DAOs directamente
+- ✅ AppDatabase versión 2 con fallbackToDestructiveMigration()
+- ✅ Código limpio sin dependencias sin usar

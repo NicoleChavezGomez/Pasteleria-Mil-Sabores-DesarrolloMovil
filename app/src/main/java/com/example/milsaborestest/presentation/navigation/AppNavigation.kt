@@ -14,17 +14,14 @@ import com.example.milsaborestest.presentation.ui.screens.home.HomeScreen
 import com.example.milsaborestest.presentation.ui.screens.login.LoginScreen
 import com.example.milsaborestest.presentation.ui.screens.productdetail.ProductDetailScreen
 import com.example.milsaborestest.presentation.ui.screens.products.AllProductsScreen
-import com.example.milsaborestest.presentation.ui.screens.purchasehistory.PurchaseHistoryScreen
 import com.example.milsaborestest.presentation.ui.screens.register.RegisterScreen
 import com.example.milsaborestest.presentation.ui.screens.splash.SplashScreen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
-import com.example.milsaborestest.presentation.viewmodel.PurchaseViewModel
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    authViewModel: AuthViewModel,
-    purchaseViewModel: PurchaseViewModel
+    authViewModel: AuthViewModel
 ) {
     NavHost(
         navController = navController,
@@ -66,9 +63,7 @@ fun AppNavigation(
         
         composable(Screen.Cart.route) {
             CartScreen(
-                navController = navController,
-                authViewModel = authViewModel,
-                purchaseViewModel = purchaseViewModel
+                navController = navController
             )
         }
         
@@ -76,14 +71,6 @@ fun AppNavigation(
             AccountScreen(
                 navController = navController,
                 authViewModel = authViewModel
-            )
-        }
-        
-        composable(Screen.PurchaseHistory.route) {
-            PurchaseHistoryScreen(
-                purchaseViewModel = purchaseViewModel,
-                authViewModel = authViewModel,
-                onNavigateBack = { navController.popBackStack() }
             )
         }
         

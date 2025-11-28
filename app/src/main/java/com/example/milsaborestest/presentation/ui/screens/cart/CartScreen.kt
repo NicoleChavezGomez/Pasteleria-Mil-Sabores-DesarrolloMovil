@@ -5,7 +5,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
@@ -16,117 +15,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.R
-import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
 import com.example.milsaborestest.presentation.viewmodel.CartViewModel
-import com.example.milsaborestest.presentation.viewmodel.PurchaseViewModel
 import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.formatPrice
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
-    navController: NavHostController,
-    authViewModel: AuthViewModel,
-    purchaseViewModel: PurchaseViewModel
+    navController: NavHostController
 ) {
     val viewModel: CartViewModel = viewModel()
     val cartItems by viewModel.cartItems.collectAsState()
     val totalPrice by viewModel.totalPrice.collectAsState()
-    val user by authViewModel.user.collectAsState()
-    val isLoading by purchaseViewModel.isLoading.collectAsState()
     
-    var showSuccessDialog by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    
-    // Funcion de checkout
-    val onCheckout: () -> Unit = {
-        if (user == null) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("Debes iniciar sesion para realizar una compra")
-            }
-        } else if (cartItems.isEmpty()) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("El carrito está vacío")
-            }
-        } else {
-            coroutineScope.launch {
-                val purchaseId = purchaseViewModel.realizarCompra(cartItems, user!!.id.toInt())
-                if (purchaseId != null) {
-                    // Compra exitosa
-                    viewModel.clearCart()
-                    showSuccessDialog = true
-                } else {
-                    snackbarHostState.showSnackbar("Error al realizar la compra")
-                }
-            }
-        }
-    }
-    
-    // Diálogo de éxito
-    if (showSuccessDialog) {
-        AlertDialog(
-            onDismissRequest = { },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(48.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = "¡Compra Exitosa!",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    text = "Tu pedido ha sido procesado correctamente. Puedes ver los detalles en tu historial de compras.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showSuccessDialog = false
-                        navController.navigate("purchase_history") {
-                            popUpTo("cart") { inclusive = true }
-                        }
-                    }
-                ) {
-                    Text("Ver Historial")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showSuccessDialog = false
-                        navController.popBackStack()
-                    }
-                ) {
-                    Text("Volver al Inicio")
-                }
-            }
-        )
-    }
-    
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold { paddingValues ->
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)) {
             // TopBar
             Surface(
                 color = CardWhite,
@@ -203,33 +115,11 @@ fun CartScreen(
                             )
                         }
                         
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(Design.PADDING_SMALL)
+                        Button(
+                            onClick = { viewModel.clearCart() },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            OutlinedButton(
-                                onClick = { viewModel.clearCart() },
-                                modifier = Modifier.weight(1f),
-                                enabled = !isLoading
-                            ) {
-                                Text("Vaciar Carrito")
-                            }
-                            
-                            Button(
-                                onClick = onCheckout,
-                                modifier = Modifier.weight(1f),
-                                enabled = !isLoading && cartItems.isNotEmpty()
-                            ) {
-                                if (isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Text(if (user != null) "Comprar" else "Iniciar Sesión")
-                                }
-                            }
+                            Text("Vaciar Carrito")
                         }
                     }
                 }

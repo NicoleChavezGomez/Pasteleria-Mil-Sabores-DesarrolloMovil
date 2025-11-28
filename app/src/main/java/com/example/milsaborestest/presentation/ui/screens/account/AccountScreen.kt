@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.milsaborestest.R
+import java.io.File
 import com.example.milsaborestest.domain.model.User
 import com.example.milsaborestest.presentation.navigation.Screen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
@@ -35,7 +36,6 @@ import com.example.milsaborestest.ui.theme.CardWhite
 import com.example.milsaborestest.ui.theme.TextDark
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.ImageHelper
-import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,12 +63,7 @@ fun AccountScreen(
                 bitmap?.let { selectedBitmap ->
                     val userId = currentUser.id.toIntOrNull()
                     userId?.let { id ->
-                        // Eliminar imagen antigua si existe
-                        currentUser.fotoPerfil?.let { oldPath ->
-                            ImageHelper.deleteProfileImage(context, oldPath)
-                        }
-                        
-                        // Guardar nueva imagen
+                        // Guardar nueva imagen (ImageHelper ya elimina las imágenes antiguas)
                         val imagePath = ImageHelper.saveProfileImage(context, selectedBitmap, id)
                         imagePath?.let { path ->
                             // Actualizar en ViewModel y base de datos
@@ -244,12 +239,14 @@ fun ProfileImage(
 ) {
     val imagePath = user.fotoPerfil
     
-    // Usar key para forzar recomposición cuando cambie la ruta de la imagen
+    // Usar key con la ruta para forzar recomposición cuando cambie
+    // Como ahora cada archivo tiene un timestamp único, la ruta será diferente cada vez
     key(imagePath) {
         if (imagePath != null && imagePath.isNotBlank()) {
             // Intentar cargar imagen desde storage
             val imageFile = File(imagePath)
             if (imageFile.exists()) {
+                // Usar File directamente - el key forzará la recarga cuando cambie la ruta
                 AsyncImage(
                     model = imageFile,
                     contentDescription = "Foto de perfil",

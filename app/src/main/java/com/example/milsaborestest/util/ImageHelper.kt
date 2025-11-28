@@ -3,6 +3,8 @@ package com.example.milsaborestest.util
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import android.util.Log
 import java.io.File
@@ -25,7 +27,7 @@ object ImageHelper {
     private const val IMAGE_QUALITY = 90
 
     /**
-     * Convierte un URI de galería a Bitmap
+     * Convierte un URI de galería a Bitmap, aplicando la rotación EXIF correcta
      * @param context Contexto de la aplicación
      * @param uri URI de la imagen seleccionada
      * @return Bitmap si la conversión fue exitosa, null en caso de error
@@ -38,14 +40,19 @@ object ImageHelper {
                 return null
             }
             
+            // Decodificar bitmap
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream.close()
             
             if (bitmap == null) {
                 Log.e(TAG, "No se pudo decodificar el bitmap del URI: $uri")
+                return null
             }
             
-            bitmap
+            // Obtener orientación EXIF y rotar si es necesario
+            val rotatedBitmap = rotateImageIfRequired(context, bitmap, uri)
+            
+            rotatedBitmap
         } catch (e: FileNotFoundException) {
             Log.e(TAG, "Archivo no encontrado: ${e.message}")
             null
@@ -55,6 +62,62 @@ object ImageHelper {
         } catch (e: Exception) {
             Log.e(TAG, "Error inesperado al convertir URI a Bitmap: ${e.message}")
             null
+        }
+    }
+    
+    /**
+     * Rota la imagen según la orientación EXIF si es necesario
+     */
+    private fun rotateImageIfRequired(context: Context, bitmap: Bitmap, uri: Uri): Bitmap {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                return bitmap
+            }
+            
+            val exif = ExifInterface(inputStream)
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
+            inputStream.close()
+            
+            val matrix = Matrix()
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> {
+                    matrix.postRotate(90f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_180 -> {
+                    matrix.postRotate(180f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_270 -> {
+                    matrix.postRotate(270f)
+                }
+                ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> {
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+                    matrix.postScale(1f, -1f)
+                }
+                ExifInterface.ORIENTATION_TRANSPOSE -> {
+                    matrix.postRotate(90f)
+                    matrix.postScale(-1f, 1f)
+                }
+                ExifInterface.ORIENTATION_TRANSVERSE -> {
+                    matrix.postRotate(270f)
+                    matrix.postScale(-1f, 1f)
+                }
+                else -> {
+                    // ORIENTATION_NORMAL o desconocida, no rotar
+                    return bitmap
+                }
+            }
+            
+            // Aplicar transformación
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al leer EXIF: ${e.message}")
+            bitmap
         }
     }
 
@@ -73,8 +136,17 @@ object ImageHelper {
                 profileDir.mkdirs()
             }
 
-            // Crear archivo con nombre único
-            val imageFile = File(profileDir, "profile_${userId}.$IMAGE_FORMAT")
+            // Eliminar todas las imágenes de perfil anteriores de este usuario
+            profileDir.listFiles()?.forEach { file ->
+                if (file.name.startsWith("profile_${userId}_") || file.name == "profile_${userId}.$IMAGE_FORMAT") {
+                    file.delete()
+                    Log.d(TAG, "Imagen antigua eliminada: ${file.name}")
+                }
+            }
+
+            // Crear archivo con nombre único (incluye timestamp para evitar cache de Coil)
+            val timestamp = System.currentTimeMillis()
+            val imageFile = File(profileDir, "profile_${userId}_${timestamp}.$IMAGE_FORMAT")
             
             // Guardar bitmap como JPEG
             val outputStream = FileOutputStream(imageFile)

@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.milsaborestest.data.local.database.AppDatabase
 import com.example.milsaborestest.data.repository.CartRepositoryImpl
 import com.example.milsaborestest.data.repository.ProductRepositoryImpl
-import com.example.milsaborestest.data.source.local.ProductJsonDataSource
 import com.example.milsaborestest.domain.model.CartItem
 import com.example.milsaborestest.domain.repository.CartRepository
 import com.example.milsaborestest.domain.repository.ProductRepository

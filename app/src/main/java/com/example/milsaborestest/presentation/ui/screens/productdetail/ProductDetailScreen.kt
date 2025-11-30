@@ -39,10 +39,11 @@ import com.example.milsaborestest.util.formatRating
 @Composable
 fun ProductDetailScreen(
     navController: NavHostController,
-    productId: String
+    productId: String,
+    cartViewModel: CartViewModel
 ) {
     val productViewModel: ProductViewModel = viewModel()
-    val cartViewModel: CartViewModel = viewModel()
+    
     // Cargar producto cuando cambia el ID
     LaunchedEffect(productId) {
         productViewModel.loadProductById(productId)

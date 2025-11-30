@@ -42,10 +42,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun AllProductsScreen(
     navController: NavHostController,
-    initialCategoryId: String? = null
+    initialCategoryId: String? = null,
+    cartViewModel: CartViewModel
 ) {
     val productViewModel: ProductViewModel = viewModel()
-    val cartViewModel: CartViewModel = viewModel()
+    
     val filteredProducts by productViewModel.filteredProducts.collectAsState()
     val categoriesState by productViewModel.categoriesState.collectAsState()
     val searchTerm by productViewModel.searchTerm.collectAsState()

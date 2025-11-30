@@ -1,5 +1,6 @@
 package com.example.milsaborestest.data.repository
 
+import android.util.Log
 import com.example.milsaborestest.data.local.database.CategoryDao
 import com.example.milsaborestest.data.local.database.ProductDao
 import com.example.milsaborestest.data.mapper.toDomain
@@ -35,7 +36,12 @@ class ProductRepositoryImpl(
     }
     
     override suspend fun getProductById(productId: String): Product? {
-        val productEntity = productDao.obtenerPorId(productId) ?: return null
+        val productEntity = productDao.obtenerPorId(productId)
+        if (productEntity == null) {
+            Log.e("ProductRepository", "Producto no encontrado con ID: $productId")
+            return null
+        }
+        Log.d("ProductRepository", "Producto encontrado: ${productEntity.nombre}, ID: $productId")
         return productEntity.toDomain()
     }
     

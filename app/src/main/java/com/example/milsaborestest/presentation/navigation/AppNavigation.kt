@@ -17,11 +17,13 @@ import com.example.milsaborestest.presentation.ui.screens.products.AllProductsSc
 import com.example.milsaborestest.presentation.ui.screens.register.RegisterScreen
 import com.example.milsaborestest.presentation.ui.screens.splash.SplashScreen
 import com.example.milsaborestest.presentation.viewmodel.AuthViewModel
+import com.example.milsaborestest.presentation.viewmodel.CartViewModel
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    cartViewModel: CartViewModel
 ) {
     NavHost(
         navController = navController,
@@ -35,13 +37,17 @@ fun AppNavigation(
         }
 
         composable(Screen.Home.route) {
-            HomeScreen(navController = navController)
+            HomeScreen(
+                navController = navController,
+                cartViewModel = cartViewModel
+            )
         }
         
         composable("products") {
             AllProductsScreen(
                 navController = navController,
-                initialCategoryId = null
+                initialCategoryId = null,
+                cartViewModel = cartViewModel
             )
         }
         
@@ -57,13 +63,15 @@ fun AppNavigation(
             val categoryId = backStackEntry.arguments?.getString("categoryId")
             AllProductsScreen(
                 navController = navController,
-                initialCategoryId = categoryId
+                initialCategoryId = categoryId,
+                cartViewModel = cartViewModel
             )
         }
         
         composable(Screen.Cart.route) {
             CartScreen(
-                navController = navController
+                navController = navController,
+                cartViewModel = cartViewModel
             )
         }
         
@@ -85,7 +93,8 @@ fun AppNavigation(
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             ProductDetailScreen(
                 navController = navController,
-                productId = productId
+                productId = productId,
+                cartViewModel = cartViewModel
             )
         }
         

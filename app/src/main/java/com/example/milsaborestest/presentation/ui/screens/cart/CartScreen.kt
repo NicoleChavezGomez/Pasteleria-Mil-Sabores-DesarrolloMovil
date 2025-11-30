@@ -29,11 +29,11 @@ import com.example.milsaborestest.util.formatPrice
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    cartViewModel: CartViewModel
 ) {
-    val viewModel: CartViewModel = viewModel()
-    val cartItems by viewModel.cartItems.collectAsState()
-    val totalPrice by viewModel.totalPrice.collectAsState()
+    val cartItems by cartViewModel.cartItems.collectAsState()
+    val totalPrice by cartViewModel.totalPrice.collectAsState()
     
     Scaffold { paddingValues ->
         Column(modifier = Modifier
@@ -71,17 +71,17 @@ fun CartScreen(
                         CartItemRow(
                             cartItem = item,
                             onIncreaseQuantity = {
-                                viewModel.updateQuantity(item.id, item.cantidad + 1)
+                                cartViewModel.updateQuantity(item.id, item.cantidad + 1)
                             },
                             onDecreaseQuantity = {
                                 if (item.cantidad > 1) {
-                                    viewModel.updateQuantity(item.id, item.cantidad - 1)
+                                    cartViewModel.updateQuantity(item.id, item.cantidad - 1)
                                 } else {
-                                    viewModel.removeFromCart(item.id)
+                                    cartViewModel.removeFromCart(item.id)
                                 }
                             },
                             onRemoveItem = {
-                                viewModel.removeFromCart(item.id)
+                                cartViewModel.removeFromCart(item.id)
                             }
                         )
                     }
@@ -116,7 +116,7 @@ fun CartScreen(
                         }
                         
                         Button(
-                            onClick = { viewModel.clearCart() },
+                            onClick = { cartViewModel.clearCart() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Vaciar Carrito")

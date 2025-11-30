@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModelProvider
 
 data class SnackbarMessage(
     val message: String,
@@ -36,9 +38,18 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     private val productDao = database.productDao()
     private val productRepository: ProductRepository = ProductRepositoryImpl(categoryDao, productDao)
     
-    // Necesitamos AuthViewModel para obtener userId
-    // Por ahora usamos un StateFlow para userId que se actualizará desde fuera
+    // Obtener AuthViewModel para acceder al usuario actual
+    // Usamos un enfoque diferente: obtenemos el userId directamente cuando se necesita
+    // Para los StateFlows, usamos un MutableStateFlow que se actualiza desde fuera
     private val _currentUserId = MutableStateFlow<Int?>(null)
+    
+    // Función helper para obtener el userId actual del AuthViewModel compartido
+    private suspend fun getCurrentUserId(): Int? {
+        // Intentar obtener el userId del AuthViewModel compartido
+        // Como no podemos acceder directamente al ViewModel compartido desde aquí,
+        // mantenemos el setUserId para que MainContent lo establezca
+        return _currentUserId.value
+    }
     
     val cartItems: StateFlow<List<CartItem>> = _currentUserId.flatMapLatest { userId ->
         if (userId != null) {
@@ -76,8 +87,13 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = 0
     )
     
+    // Función para establecer el userId desde MainContent
+    // Esto es necesario porque cada pantalla crea su propia instancia de CartViewModel
+    // y necesitamos sincronizar el userId desde MainContent
     fun setUserId(userId: Int?) {
+        Log.d(Constants.TAG, "CartViewModel.setUserId llamado con: $userId")
         _currentUserId.value = userId
+        Log.d(Constants.TAG, "CartViewModel.setUserId - _currentUserId actualizado a: ${_currentUserId.value}")
     }
     
     private val _snackbarMessage = MutableStateFlow<SnackbarMessage?>(null)
@@ -89,14 +105,18 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val userId = _currentUserId.value
+                Log.d(Constants.TAG, "addToCart - userId actual: $userId, productId: $productId")
                 if (userId == null) {
+                    Log.e(Constants.TAG, "addToCart - userId es null, no se puede agregar al carrito")
                     _snackbarMessage.value = SnackbarMessage("Debes iniciar sesión para agregar productos al carrito")
                     return@launch
                 }
                 
                 Log.d(Constants.TAG, "addToCart llamado: productId=$productId, quantity=$quantity, userId=$userId")
                 val product = productRepository.getProductById(productId)
+                Log.d(Constants.TAG, "addToCart - producto encontrado: ${product != null}, productId buscado: $productId")
                 if (product != null) {
+                    Log.d(Constants.TAG, "addToCart - producto: ${product.nombre}, precio: ${product.precio}")
                     val cartItem = CartItem(
                         id = product.id,
                         nombre = product.nombre,

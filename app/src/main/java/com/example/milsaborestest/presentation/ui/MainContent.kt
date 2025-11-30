@@ -61,9 +61,21 @@ fun MainContent(
     val user by authViewModel.user.collectAsState()
     
     // Actualizar userId en CartViewModel cuando el usuario cambie
-    LaunchedEffect(user) {
-        val userId = user?.id?.toIntOrNull()
-        cartViewModel.setUserId(userId)
+    // Como todas las pantallas comparten la misma instancia de CartViewModel,
+    // solo necesitamos establecer el userId aquí en MainContent
+    LaunchedEffect(user, isAuthenticated) {
+        if (isAuthenticated && user != null) {
+            val userId = user?.id?.toIntOrNull()
+            Log.d(Constants.TAG, "MainContent - Actualizando userId: user=${user?.name}, userId=$userId, isAuthenticated=$isAuthenticated")
+            if (userId != null) {
+                cartViewModel.setUserId(userId)
+            } else {
+                Log.e(Constants.TAG, "MainContent - Error: userId es null después de conversión. user.id=${user?.id}")
+            }
+        } else {
+            Log.d(Constants.TAG, "MainContent - Usuario no autenticado, estableciendo userId a null")
+            cartViewModel.setUserId(null)
+        }
     }
     
     // Debug: Log del estado de autenticación
@@ -206,7 +218,8 @@ fun MainContent(
                 Box(modifier = Modifier.padding(paddingValues)) {
                     AppNavigation(
                         navController = navController,
-                        authViewModel = authViewModel
+                        authViewModel = authViewModel,
+                        cartViewModel = cartViewModel
                     )
                 }
             }

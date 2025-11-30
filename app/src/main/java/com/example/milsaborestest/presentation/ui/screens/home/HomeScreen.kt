@@ -48,9 +48,11 @@ import com.example.milsaborestest.util.UiState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    cartViewModel: CartViewModel
+) {
     val productViewModel: ProductViewModel = viewModel()
-    val cartViewModel: CartViewModel = viewModel()
     val categoriesState by productViewModel.categoriesState.collectAsState()
     val featuredProductsState by productViewModel.featuredProductsState.collectAsState()
     val totalItems by cartViewModel.totalItems.collectAsState()

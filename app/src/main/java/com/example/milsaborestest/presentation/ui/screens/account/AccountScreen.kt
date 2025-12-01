@@ -48,8 +48,6 @@ fun AccountScreen(
     val context = LocalContext.current
     
     // Launcher para seleccionar imagen de galería
-    // ✅ BEST PRACTICE: El launcher se registra en rememberLauncherForActivityResult
-    // que es la forma correcta en Compose, equivalente a registerForActivityResult en Fragment/Activity
     val pickMedia = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->

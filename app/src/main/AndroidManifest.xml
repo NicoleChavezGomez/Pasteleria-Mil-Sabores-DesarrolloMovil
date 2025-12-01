@@ -13,7 +13,6 @@
          sin necesidad de permisos READ_EXTERNAL_STORAGE o READ_MEDIA_IMAGES. -->
 
     <application
-        android:name=".di.MilSaboresApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

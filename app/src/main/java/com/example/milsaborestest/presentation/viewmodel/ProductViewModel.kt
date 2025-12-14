@@ -3,14 +3,9 @@ package com.example.milsaborestest.presentation.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.milsaborestest.data.local.database.AppDatabase
-import com.example.milsaborestest.data.repository.ProductRepositoryImpl
+import com.example.milsaborestest.data.remote.RetrofitInstance
+import com.example.milsaborestest.data.remote.mapper.toDomain
 import com.example.milsaborestest.domain.model.Product
-import com.example.milsaborestest.domain.usecase.GetAllProductsUseCase
-import com.example.milsaborestest.domain.usecase.GetCategoriesUseCase
-import com.example.milsaborestest.domain.usecase.GetFeaturedProductsUseCase
-import com.example.milsaborestest.domain.usecase.GetProductsByCategoryUseCase
-import com.example.milsaborestest.domain.usecase.GetProductByIdUseCase
 import com.example.milsaborestest.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,17 +15,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class ProductViewModel(application: Application) : AndroidViewModel(application) {
-    
-    private val database = AppDatabase.getDatabase(application)
-    private val categoryDao = database.categoryDao()
-    private val productDao = database.productDao()
-    private val productRepository = ProductRepositoryImpl(categoryDao, productDao)
-    private val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
-    private val getProductsByCategoryUseCase = GetProductsByCategoryUseCase(productRepository)
-    private val getProductByIdUseCase = GetProductByIdUseCase(productRepository)
-    private val getFeaturedProductsUseCase = GetFeaturedProductsUseCase(productRepository)
-    private val getAllProductsUseCase = GetAllProductsUseCase(productRepository)
+class ProductViewModel(application: Application) : AndroidViewModel(application)
     
     private val _categoriesState = MutableStateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>> = _categoriesState.asStateFlow()
@@ -133,7 +118,8 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadCategories() {
         viewModelScope.launch {
             try {
-                val categories = getCategoriesUseCase()
+                val categoriesDto = RetrofitInstance.api.getCategories()
+                val categories = categoriesDto.map { it.toDomain() }
                 _categoriesState.value = UiState.Success(categories)
             } catch (e: Exception) {
                 _categoriesState.value = UiState.Error(e.message ?: "Error desconocido")
@@ -144,7 +130,12 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadFeaturedProducts() {
         viewModelScope.launch {
             try {
-                val products = getFeaturedProductsUseCase()
+                val productsDto = RetrofitInstance.api.getProducts()
+                // Productos destacados: los 4 primeros con mejor rating
+                val products = productsDto
+                    .map { it.toDomain() }
+                    .sortedByDescending { it.rating }
+                    .take(4)
                 _featuredProductsState.value = UiState.Success(products)
             } catch (e: Exception) {
                 _featuredProductsState.value = UiState.Error(e.message ?: "Error desconocido")
@@ -156,7 +147,8 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 _productsByCategoryState.value = UiState.Loading
-                val products = getProductsByCategoryUseCase(categoryId)
+                val productsDto = RetrofitInstance.api.getProductsByCategory(categoryId)
+                val products = productsDto.map { it.toDomain() }
                 _productsByCategoryState.value = UiState.Success(products)
             } catch (e: Exception) {
                 _productsByCategoryState.value = UiState.Error(e.message ?: "Error desconocido")
@@ -168,12 +160,9 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 _productDetailState.value = UiState.Loading
-                val product = getProductByIdUseCase(productId)
-                if (product != null) {
-                    _productDetailState.value = UiState.Success(product)
-                } else {
-                    _productDetailState.value = UiState.Error("Producto no encontrado")
-                }
+                val productDto = RetrofitInstance.api.getProductById(productId)
+                val product = productDto.toDomain()
+                _productDetailState.value = UiState.Success(product)
             } catch (e: Exception) {
                 _productDetailState.value = UiState.Error(e.message ?: "Error desconocido")
             }
@@ -183,7 +172,8 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadAllProducts() {
         viewModelScope.launch {
             try {
-                val products = getAllProductsUseCase()
+                val productsDto = RetrofitInstance.api.getProducts()
+                val products = productsDto.map { it.toDomain() }
                 _allProducts.value = products
                 
                 // Calcular rango de precios
@@ -202,15 +192,10 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
                 
-                // Construir el mapa de producto a categoría
+                // Construir el mapa de producto a categoría desde los DTOs
                 val categoryMap = mutableMapOf<String, String>()
-                val categories = getCategoriesUseCase()
-                
-                categories.forEach { category ->
-                    val productsInCategory = getProductsByCategoryUseCase(category.id)
-                    productsInCategory.forEach { product ->
-                        categoryMap[product.id] = category.id
-                    }
+                productsDto.forEach { productDto ->
+                    categoryMap[productDto.id] = productDto.categoryId
                 }
                 
                 _productToCategoryMap.value = categoryMap

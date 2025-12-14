@@ -66,10 +66,37 @@ Tareas completadas y validadas.
 - [x] **Sistema de persistencia general**
   - Room Database configurado como solución de persistencia local
   - Datos persistentes: Usuarios (UserEntity), Carrito (CartEntity), Categorías (CategoryEntity), Productos (ProductEntity)
-  - Base de datos versión 2 con fallbackToDestructiveMigration()
-  - Productos y categorías cargados directamente en base de datos (hardcoded en insertarDatosPorDefecto)
+  - Base de datos versión 3 con fallbackToDestructiveMigration()
   - Estado de autenticación: Persistido en base de datos, se mantiene entre sesiones
   - Carrito de compras: Persistido en base de datos, se mantiene entre sesiones
+
+### ✅ Integración de API REST
+- [x] **Configuración de Retrofit y MockAPI.io**
+  - `RetrofitInstance.kt` creado con configuración de Retrofit
+  - `ApiService.kt` con endpoints para categorías y productos
+  - URL base: `https://693e248ef55f1be793046cd9.mockapi.io/api/v1/`
+  - Dependencias agregadas: Retrofit y Gson Converter
+  - Logs de verificación implementados para debugging
+
+- [x] **DTOs y Mappers para API**
+  - `CategoryDto.kt` y `ProductDto.kt` creados
+  - `CategoryDtoMapper.kt` y `ProductDtoMapper.kt` con funciones `toDomain()`
+  - Mapeo completo de datos desde API a modelos de dominio
+
+- [x] **Integración en ProductViewModel**
+  - `loadCategories()` consume desde API REST
+  - `loadFeaturedProducts()` consume desde API REST
+  - `loadAllProducts()` consume desde API REST
+  - `loadProductsByCategory()` consume desde API REST
+  - `loadProductById()` consume desde API REST
+  - Reemplazo completo de Room Database por API REST para productos y categorías
+  - Logs de verificación agregados en todas las funciones de carga
+
+- [x] **Documentación de API**
+  - `DOCUMENTACION_API_MOCKAPI.md` creado con documentación completa
+  - `README_API.md` creado con resumen de endpoints
+  - `PLAN_IMPLEMENTACION_RETROFIT.md` actualizado con progreso
+  - Datos JSON preparados para importación en MockAPI.io
 
 ### ✅ Recursos Nativos
 - [x] **Sistema de notificaciones - Carrito abandonado**
@@ -1308,6 +1335,13 @@ Tareas completadas y validadas.
 51. ✅ Eliminar ProductJsonDataSource y DTOs obsoletos
 52. ✅ Asociar carrito de compras a usuarios (carrito por usuario)
 
+#### Integración de API REST
+53. ✅ Configurar Retrofit y MockAPI.io
+54. ✅ Crear DTOs y Mappers para API
+55. ✅ Integrar API REST en ProductViewModel
+56. ✅ Documentar API y endpoints
+57. ✅ Agregar logs de verificación para consumo de API
+
 ---
 
 ### 🟠 TAREAS EN CODE REVIEW
@@ -1321,17 +1355,52 @@ Tareas completadas y validadas.
 
 #### 🔴 PRIORIDAD ALTA - Tareas Críticas
 
-#### Migración de Productos de JSON a Room Database
-53. ❌ Crear entidad CategoryEntity para categorías en base de datos
-54. ❌ Crear entidad ProductEntity para productos en base de datos
-55. ❌ Crear CategoryDao con queries necesarias
-56. ❌ Crear ProductDao con queries necesarias
-57. ❌ Crear mappers para convertir entre Entity y Domain
-58. ❌ Implementar carga de productos y categorías default desde JSON
-59. ❌ Actualizar AppDatabase para incluir nuevas entidades y DAOs
-60. ❌ Actualizar ProductRepositoryImpl para usar DAO en lugar de JSON
-61. ❌ Actualizar AppModule para inyectar nuevos DAOs
-62. ❌ Eliminar o deprecar ProductJsonDataSource
+#### Testing con Compose UI Tests
+58. ❌ **Configurar dependencias de testing**
+  - Agregar `androidx.compose.ui:ui-test-junit4` (ya incluido en BOM)
+  - Agregar `androidx.compose.ui:ui-test-manifest` (ya incluido)
+  - Agregar `androidx.navigation:navigation-testing:2.7.5`
+  - Agregar `testOptions { animationsDisabled = true }` en build.gradle.kts
+
+59. ❌ **Crear estructura de tests**
+  - Crear directorio `androidTest/java/com/example/milsaborestest/ui/screen/`
+  - Configurar `createComposeRule()` para tests de UI
+  - Preparar helpers para mock de ViewModels
+
+60. ❌ **Tests de HomeScreen**
+  - Test: Verificar que se muestra título "Productos Destacados"
+  - Test: Verificar que se muestra sección "Categorías"
+  - Test: Verificar que se muestra botón "Ver todos"
+  - Test: Verificar navegación al hacer clic en categoría
+  - Test: Verificar navegación al hacer clic en producto destacado
+
+61. ❌ **Tests de AllProductsScreen**
+  - Test: Verificar que se muestra lista de productos
+  - Test: Verificar filtrado por categoría
+  - Test: Verificar búsqueda de productos
+  - Test: Verificar navegación a detalle de producto
+
+62. ❌ **Tests de ProductDetailScreen**
+  - Test: Verificar que se muestra información del producto
+  - Test: Verificar que se muestra botón "Agregar al carrito"
+  - Test: Verificar funcionalidad de agregar al carrito
+
+63. ❌ **Tests de CartScreen**
+  - Test: Verificar que se muestra lista de items del carrito
+  - Test: Verificar cálculo de total
+  - Test: Verificar controles de cantidad
+  - Test: Verificar eliminación de items
+
+64. ❌ **Tests de LoginScreen**
+  - Test: Verificar que se muestran campos de email y contraseña
+  - Test: Verificar validación de campos vacíos
+  - Test: Verificar validación de formato de email
+  - Test: Verificar navegación después de login exitoso
+
+65. ❌ **Tests de Navigation**
+  - Test: Verificar navegación entre pantallas principales
+  - Test: Verificar navegación con parámetros (productId, categoryId)
+  - Test: Verificar navegación condicional según autenticación
 
 
 #### Planificación y Documentación
@@ -1343,34 +1412,40 @@ Tareas completadas y validadas.
 
 | Estado | Cantidad | Porcentaje |
 |--------|----------|------------|
-| 🟢 Completadas | 51 | ~78% |
-| 🟠 Code Review | 1 | ~2% |
-| 🔵 Pendientes (Críticas) | 10 | ~15% |
-| 🔵 Pendientes (Opcionales) | 1 | ~2% |
-| **TOTAL** | **63** | **100%** |
+| 🟢 Completadas | 57 | ~80% |
+| 🟠 Code Review | 1 | ~1% |
+| 🔵 Pendientes (Críticas) | 8 | ~11% |
+| 🔵 Pendientes (Opcionales) | 1 | ~1% |
+| **TOTAL** | **67** | **100%** |
 
 ---
 
 ### 📈 PROGRESO GENERAL
 
-- **Tareas Completadas**: 51/63 (81%)
-- **Tareas Pendientes Críticas**: 10/63 (16%)
-- **Tareas Pendientes Opcionales**: 1/63 (2%)
-- **Tareas en Revisión**: 1/63 (2%)
+- **Tareas Completadas**: 57/67 (85%)
+- **Tareas Pendientes Críticas**: 8/67 (12%)
+- **Tareas Pendientes Opcionales**: 1/67 (1%)
+- **Tareas en Revisión**: 1/67 (1%)
 
 ---
 
 ### 🎯 PRÓXIMAS ACCIONES PRIORITARIAS
 
-1. **Verificar y documentar Trello** (Tarea pendiente)
+1. **Implementar Testing con Compose UI Tests** (Tareas 58-65)
+   - Contexto: Mejora calidad del código y detecta regresiones
+   - Impacto: Mayor confiabilidad y mantenibilidad
+   - Prioridad: 🔴 Alta
+   - Estado: Dependencias configuradas, pendiente implementación de tests
+
+2. **Verificar y documentar Trello** (Tarea pendiente)
    - Contexto: Requisito de la rúbrica
    - Impacto: Mejora nota en planificación
    - Prioridad: 🟡 Importante
 
 ---
 
-**Última actualización del listado**: 28-11-2025  
-**Última verificación de codebase**: 28-11-2025
+**Última actualización del listado**: 14-12-2025  
+**Última verificación de codebase**: 14-12-2025
 
 ### 📝 NOTAS DE VERIFICACIÓN (28-11-2025)
 
@@ -1389,7 +1464,15 @@ Tareas completadas y validadas.
 - ✅ **Sistema de Compras**: Eliminado del proyecto (solo carrito)
 
 **Funcionalidades actuales verificadas:**
-- ✅ Productos y categorías cargados desde Room Database
-- ✅ ProductRepositoryImpl usa DAOs directamente
-- ✅ AppDatabase versión 2 con fallbackToDestructiveMigration()
-- ✅ Código limpio sin dependencias sin usar
+- ✅ Productos y categorías cargados desde API REST (MockAPI.io)
+- ✅ ProductViewModel consume datos desde Retrofit
+- ✅ AppDatabase versión 3 con fallbackToDestructiveMigration()
+- ✅ Logs de verificación implementados para debugging de API
+- ✅ Dependencias de testing configuradas (Compose UI Tests, Navigation Testing)
+- ✅ Código limpio y documentado
+
+**Cambios recientes (14-12-2025):**
+- ✅ Integración completa de API REST con Retrofit
+- ✅ Productos y categorías migrados de Room Database a API REST
+- ✅ Dependencias de testing agregadas (Compose UI Tests, Navigation Testing)
+- ✅ Documentación de API actualizada

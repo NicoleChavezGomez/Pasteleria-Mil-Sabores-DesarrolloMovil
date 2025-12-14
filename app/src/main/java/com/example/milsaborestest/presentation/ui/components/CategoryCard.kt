@@ -50,8 +50,9 @@ fun CategoryCard(
             .padding(Design.PADDING_SMALL)
             .scale(scale)
             .clickable(
-                interactionSource = interactionSource
-            ) { onCategoryClick(category.id) },
+                interactionSource = interactionSource,
+                onClick = { onCategoryClick(category.id) }
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = Design.CARD_ELEVATION),
         shape = RoundedCornerShape(Design.CARD_RADIUS),
         colors = CardDefaults.cardColors(containerColor = CardWhite)

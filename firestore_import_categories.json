@@ -1,0 +1,43 @@
+{
+  "tortas-cuadradas": {
+    "id": "tortas-cuadradas",
+    "nombre": "Tortas Cuadradas",
+    "icono": "square"
+  },
+  "tortas-circulares": {
+    "id": "tortas-circulares",
+    "nombre": "Tortas Circulares",
+    "icono": "circle"
+  },
+  "postres-individuales": {
+    "id": "postres-individuales",
+    "nombre": "Postres Individuales",
+    "icono": "cookie"
+  },
+  "productos-sin-azucar": {
+    "id": "productos-sin-azucar",
+    "nombre": "Productos Sin Azúcar",
+    "icono": "favorite"
+  },
+  "pasteleria-tradicional": {
+    "id": "pasteleria-tradicional",
+    "nombre": "Pastelería Tradicional",
+    "icono": "home"
+  },
+  "productos-sin-gluten": {
+    "id": "productos-sin-gluten",
+    "nombre": "Productos Sin Gluten",
+    "icono": "eco"
+  },
+  "productos-veganos": {
+    "id": "productos-veganos",
+    "nombre": "Productos Veganos",
+    "icono": "park"
+  },
+  "tortas-especiales": {
+    "id": "tortas-especiales",
+    "nombre": "Tortas Especiales",
+    "icono": "star"
+  }
+}
+

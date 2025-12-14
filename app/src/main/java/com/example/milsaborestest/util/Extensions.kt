@@ -11,14 +11,14 @@ import java.util.Locale
  * Formatea un número como moneda chilena
  */
 fun Int.formatPrice(): String {
-    return NumberFormat.getCurrencyInstance(Locale("es", "CL")).format(this)
+    return NumberFormat.getCurrencyInstance(Locale.Builder().setLanguage("es").setRegion("CL").build()).format(this)
 }
 
 /**
  * Formatea un número como moneda chilena
  */
 fun Long.formatPrice(): String {
-    return NumberFormat.getCurrencyInstance(Locale("es", "CL")).format(this)
+    return NumberFormat.getCurrencyInstance(Locale.Builder().setLanguage("es").setRegion("CL").build()).format(this)
 }
 
 /**

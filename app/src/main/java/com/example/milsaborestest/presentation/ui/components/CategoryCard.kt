@@ -51,6 +51,7 @@ fun CategoryCard(
             .scale(scale)
             .clickable(
                 interactionSource = interactionSource,
+                indication = null,
                 onClick = { onCategoryClick(category.id) }
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = Design.CARD_ELEVATION),

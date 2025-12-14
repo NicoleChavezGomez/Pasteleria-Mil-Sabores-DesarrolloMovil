@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.lifecycle.ViewModelProvider
 
 data class SnackbarMessage(
@@ -28,6 +29,7 @@ data class SnackbarMessage(
     val onAction: (suspend () -> Unit)? = null
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CartViewModel(application: Application) : AndroidViewModel(application) {
     
     private val database = AppDatabase.getDatabase(application)

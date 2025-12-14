@@ -2,7 +2,8 @@
 
 > **Formato**: Tarjetas de Trello con checklists, etiquetas y descripciones detalladas  
 > **Fecha de creación**: 28-11-2025  
-> **Total de tarjetas**: 15
+> **Última actualización**: 15-12-2025  
+> **Total de tarjetas**: 17
 
 ---
 
@@ -367,42 +368,130 @@ Documentación del proyecto y configuración de control de versiones con Git y G
 
 ---
 
-## 🔵 BACKLOG (Pendientes)
-
-### 📦 Tarjeta 14: Migración de Productos de JSON a Room Database
-**Etiquetas**: `✅ Done` `💾 Database` `📦 Productos`
+### 🔌 Tarjeta 11: Integración de API REST con Retrofit
+**Etiquetas**: `✅ Done` `🔌 API` `🌐 Retrofit` `📡 MockAPI.io`
 
 **Descripción:**
-Migración completa de productos y categorías desde archivo JSON (assets) a Room Database. Todos los datos ahora se cargan desde la base de datos local.
+Integración completa de API REST usando Retrofit para consumir productos y categorías desde MockAPI.io, reemplazando la carga desde Room Database.
 
 **Checklist:**
-- [x] Crear CategoryEntity para categorías en base de datos
-- [x] Crear ProductEntity para productos en base de datos
-- [x] Crear CategoryDao con queries necesarias (obtenerTodasSuspend, insertar, insertarTodas, contar)
-- [x] Crear ProductDao con queries necesarias (obtenerTodosSuspend, obtenerPorId, obtenerPorCategoriaSuspend, insertar, insertarTodos)
-- [x] Crear mappers para convertir entre Entity y Domain (CategoryMapper, ProductMapper)
-- [x] Implementar carga de productos y categorías default directamente en insertarDatosPorDefecto()
-- [x] Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
-- [x] Actualizar ProductRepositoryImpl para usar CategoryDao y ProductDao directamente
-- [x] Eliminar ProductJsonDataSource (ya no se usa)
-- [x] Eliminar DTOs obsoletos (ProductDto, CategoryDto, ProductosResponseDto)
+- [x] Configurar RetrofitInstance con URL base de MockAPI.io
+- [x] Crear ApiService con endpoints (getCategories, getProducts, getProductsByCategory, getProductById)
+- [x] Crear DTOs (CategoryDto, ProductDto) con SerializedName
+- [x] Crear Mappers (CategoryDtoMapper, ProductDtoMapper) con funciones toDomain()
+- [x] Actualizar ProductViewModel para consumir desde API REST
+- [x] Agregar logs de verificación para debugging
+- [x] Configurar GsonConverterFactory para serialización/deserialización
+- [x] Documentar API en DOCUMENTACION_API_MOCKAPI.md
 
-**Archivos creados/modificados:**
-- `data/local/database/CategoryEntity.kt` ✅
-- `data/local/database/ProductEntity.kt` ✅
-- `data/local/database/CategoryDao.kt` ✅
-- `data/local/database/ProductDao.kt` ✅
-- `data/mapper/CategoryMapper.kt` ✅
-- `data/mapper/ProductMapper.kt` ✅ (actualizado)
-- `data/local/database/AppDatabase.kt` ✅ (actualizado)
-- `data/repository/ProductRepositoryImpl.kt` ✅ (actualizado)
+**Archivos principales:**
+- `data/remote/RetrofitInstance.kt`
+- `data/remote/ApiService.kt`
+- `data/remote/dto/CategoryDto.kt`, `ProductDto.kt`
+- `data/remote/mapper/CategoryDtoMapper.kt`, `ProductDtoMapper.kt`
+- `presentation/viewmodel/ProductViewModel.kt` (actualizado)
 
 **Notas técnicas:**
-- Productos y categorías cargados directamente en base de datos (hardcoded en insertarDatosPorDefecto)
-- Foreign Key de ProductEntity a CategoryEntity configurada
-- ProductRepositoryImpl ahora usa DAOs en lugar de JSON
-- Código simplificado: eliminado ProductJsonDataSource y DTOs obsoletos
-- Base de datos versión 2 con fallbackToDestructiveMigration()
+- URL base: `https://693e248ef55f1be793046cd9.mockapi.io/api/v1/`
+- Productos y categorías ahora se cargan desde API REST
+- Logs implementados para verificar consumo de API
+- Dependencias: Retrofit 2.9.0, Gson Converter 2.9.0
+
+---
+
+### 🧪 Tarjeta 16: Testing con Compose UI Tests
+**Etiquetas**: `✅ Done` `🧪 Testing` `📱 UI Tests` `✅ Verificado`
+
+**Descripción:**
+Implementación de tests de UI usando Compose UI Testing framework para verificar funcionalidad de pantallas principales.
+
+**Checklist:**
+- [x] Configurar dependencias de testing (ui-test-junit4, ui-test-manifest, navigation-testing)
+- [x] Agregar testOptions { animationsDisabled = true } en build.gradle.kts
+- [x] Crear directorio androidTest/java/com/example/milsaborestest/ui/screen/
+- [x] Configurar createComposeRule() para tests de UI
+- [x] Implementar HomeScreenTest con 3 tests:
+  - Verificar que se muestra título "Productos Destacados"
+  - Verificar que se muestra sección "Categorías"
+  - Verificar que se muestra botón "Ver todos"
+- [x] Implementar AllProductsScreenTest con 2 tests:
+  - Verificar que se muestra título "Todos los Productos"
+  - Verificar mensaje cuando no hay productos
+- [x] Verificar que todos los tests pasan correctamente
+
+**Archivos principales:**
+- `app/build.gradle.kts` (dependencias de testing)
+- `gradle/libs.versions.toml` (versiones actualizadas)
+- `androidTest/java/com/example/milsaborestest/ui/screen/HomeScreenTest.kt`
+- `androidTest/java/com/example/milsaborestest/ui/screen/AllProductsScreenTest.kt`
+
+**Notas técnicas:**
+- Tests implementados siguiendo patrón de PokeStore
+- Dependencias: androidx.compose.ui:ui-test-junit4, androidx.navigation:navigation-testing:2.7.5
+- Animaciones deshabilitadas en tests para mejor rendimiento
+- Tests verificados y funcionando en Android Studio
+
+---
+
+### 🎨 Tarjeta 17: Iconos de la Aplicación (Launcher Icons)
+**Etiquetas**: `✅ Done` `🎨 Assets` `📱 Iconos` `🎯 Launcher`
+
+**Descripción:**
+Creación e implementación de iconos de la aplicación (Launcher Icons) en todas las densidades para Android, incluyendo icono para Play Store.
+
+**Checklist:**
+- [x] Crear ic_launcher-playstore.png (165 KB) para Play Store
+- [x] Generar ic_launcher_foreground.webp en 5 densidades (hdpi, mdpi, xhdpi, xxhdpi, xxxhdpi)
+- [x] Actualizar ic_launcher.webp en todas las densidades
+- [x] Actualizar ic_launcher_round.webp en todas las densidades
+- [x] Configurar ic_launcher.xml para Android 8.0+ (adaptive icon)
+- [x] Configurar ic_launcher_round.xml para Android 8.0+ (adaptive icon)
+- [x] Actualizar ic_launcher_background.xml con nuevo diseño
+
+**Archivos principales:**
+- `app/src/main/ic_launcher-playstore.png`
+- `app/src/main/res/mipmap-*/ic_launcher_foreground.webp` (5 densidades)
+- `app/src/main/res/mipmap-*/ic_launcher.webp` (5 densidades)
+- `app/src/main/res/mipmap-*/ic_launcher_round.webp` (5 densidades)
+- `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`
+- `app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml`
+- `app/src/main/res/drawable/ic_launcher_background.xml`
+
+**Notas técnicas:**
+- Total: 19 archivos de recursos agregados/modificados
+- Iconos adaptativos para Android 8.0+ (Oreo)
+- Iconos generados usando Image Asset Studio de Android Studio
+- Soporte completo para todas las densidades de pantalla
+
+---
+
+## 🔵 BACKLOG (Pendientes)
+
+### 📦 Tarjeta 14: Migración de Productos de JSON a Room Database (OBSOLETO - Reemplazado por API REST)
+**Etiquetas**: `✅ Done` `💾 Database` `📦 Productos` `⚠️ Obsoleto`
+
+**Descripción:**
+~~Migración completa de productos y categorías desde archivo JSON (assets) a Room Database.~~ **ACTUALIZACIÓN**: Esta tarea fue completada pero luego reemplazada por la integración de API REST (Tarjeta 11). Los productos y categorías ahora se cargan desde MockAPI.io usando Retrofit.
+
+**Estado**: ✅ Completada inicialmente, luego migrada a API REST
+**Reemplazada por**: Tarjeta 11 - Integración de API REST con Retrofit
+
+**Checklist (Histórico):**
+- [x] Crear CategoryEntity para categorías en base de datos
+- [x] Crear ProductEntity para productos en base de datos
+- [x] Crear CategoryDao con queries necesarias
+- [x] Crear ProductDao con queries necesarias
+- [x] Crear mappers para convertir entre Entity y Domain
+- [x] Implementar carga de productos y categorías default
+- [x] Actualizar AppDatabase para incluir CategoryEntity y ProductEntity
+- [x] Actualizar ProductRepositoryImpl para usar CategoryDao y ProductDao
+- [x] Eliminar ProductJsonDataSource
+- [x] Eliminar DTOs obsoletos
+
+**Notas técnicas:**
+- Esta implementación fue reemplazada por la integración de API REST
+- Los productos y categorías ahora se consumen desde MockAPI.io
+- Ver Tarjeta 11 para la implementación actual
 
 ---
 
@@ -437,16 +526,19 @@ Verificar y documentar planificación en Trello según requisitos de la rúbrica
 
 | Estado | Cantidad | Porcentaje |
 |--------|----------|------------|
-| 🟢 Done | 14 | ~93% |
-| 🔵 Backlog | 1 | ~7% |
-| **TOTAL** | **15** | **100%** |
+| 🟢 Done | 16 | ~94% |
+| 🔵 Backlog | 1 | ~6% |
+| **TOTAL** | **17** | **100%** |
 
 ### 📈 Progreso General
 
-- **Tarjetas Completadas**: 14/15 (93%)
-- **Tarjetas Pendientes**: 1/15 (7%)
+- **Tarjetas Completadas**: 16/17 (94%)
+- **Tarjetas Pendientes**: 1/17 (6%)
 - **Funcionalidades Críticas**: ✅ Completadas
 - **Recursos Nativos**: ✅ Completados (Notificaciones + Galería)
+- **Integración API REST**: ✅ Completada (Retrofit + MockAPI.io)
+- **Testing UI**: ✅ Completado (HomeScreen y AllProductsScreen)
+- **Iconos de Aplicación**: ✅ Completados (Launcher Icons en todas las densidades)
 - **Migración de Productos a Room**: ✅ Completada
 - **Carrito por Usuario**: ✅ Completado
 - **Limpieza de Código**: ✅ Completada (eliminado código sin usar)
@@ -482,6 +574,13 @@ Verificar y documentar planificación en Trello según requisitos de la rúbrica
 
 ---
 
-**Última actualización**: Diciembre 2025  
+**Última actualización**: 15-12-2025  
 **Formato**: Tarjetas de Trello con checklists y descripciones detalladas
+
+**Cambios recientes (15-12-2025):**
+- ✅ Agregada Tarjeta 16: Testing con Compose UI Tests
+- ✅ Agregada Tarjeta 17: Iconos de la Aplicación (Launcher Icons)
+- ✅ Agregada Tarjeta 11: Integración de API REST con Retrofit
+- ✅ Tests de UI verificados y funcionando
+- ✅ Iconos generados en todas las densidades
 

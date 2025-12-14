@@ -76,6 +76,10 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
     
+    // Network (Retrofit)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -16,12 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.coerceAtLeast
-import androidx.compose.ui.unit.coerceAtMost
 import com.example.milsaborestest.util.Constants.Design
 import com.example.milsaborestest.util.formatPrice
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION") // menuAnchor() está deprecado pero MenuAnchorType.Popup no está disponible en esta versión de Material3
 @Composable
 fun ProductFilters(
     searchTerm: String,
@@ -35,11 +34,11 @@ fun ProductFilters(
     maxPriceDefault: Int,
     onMinPriceChange: (Int) -> Unit,
     onMaxPriceChange: (Int) -> Unit,
-    sortBy: SortOption = SortOption.DEFAULT,
     onSortChange: (SortOption) -> Unit,
     productsCount: Int,
     onApplyFilters: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sortBy: SortOption = SortOption.DEFAULT
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -102,6 +101,7 @@ fun ProductFilters(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
                     },
                     modifier = Modifier
+                        // @Suppress("DEPRECATION") - menuAnchor() deprecado pero necesario hasta que Material3 actualice la API
                         .menuAnchor()
                         .fillMaxWidth()
                 )
@@ -222,6 +222,7 @@ fun ProductFilters(
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     modifier = Modifier
+                        // @Suppress("DEPRECATION") - menuAnchor() deprecado pero necesario hasta que Material3 actualice la API
                         .menuAnchor()
                         .fillMaxWidth()
                 )
@@ -230,7 +231,7 @@ fun ProductFilters(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    SortOption.values().forEach { option ->
+                    SortOption.entries.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option.label) },
                             onClick = {

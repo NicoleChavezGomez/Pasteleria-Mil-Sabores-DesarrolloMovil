@@ -38,6 +38,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        animationsDisabled = true
+    }
 }
 
 dependencies {
@@ -76,12 +79,17 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
     
+    // Network (Retrofit)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

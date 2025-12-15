@@ -74,8 +74,9 @@ fun ProductCard(
                     .clip(RoundedCornerShape(Design.BUTTON_RADIUS))
                     .clickable(
                         interactionSource = interactionSource,
-                        indication = null
-                    ) { onProductClick(product.id) },
+                        indication = null,
+                        onClick = { onProductClick(product.id) }
+                    ),
                 contentScale = ContentScale.Crop
             )
             

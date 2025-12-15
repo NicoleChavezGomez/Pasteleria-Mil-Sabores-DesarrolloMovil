@@ -1,16 +1,13 @@
 package com.example.milsaborestest.presentation.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.milsaborestest.data.local.database.AppDatabase
-import com.example.milsaborestest.data.repository.ProductRepositoryImpl
+import com.example.milsaborestest.data.remote.RetrofitInstance
+import com.example.milsaborestest.data.remote.mapper.toDomain
 import com.example.milsaborestest.domain.model.Product
-import com.example.milsaborestest.domain.usecase.GetAllProductsUseCase
-import com.example.milsaborestest.domain.usecase.GetCategoriesUseCase
-import com.example.milsaborestest.domain.usecase.GetFeaturedProductsUseCase
-import com.example.milsaborestest.domain.usecase.GetProductsByCategoryUseCase
-import com.example.milsaborestest.domain.usecase.GetProductByIdUseCase
+import com.example.milsaborestest.util.Constants
 import com.example.milsaborestest.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,16 +18,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ProductViewModel(application: Application) : AndroidViewModel(application) {
-    
-    private val database = AppDatabase.getDatabase(application)
-    private val categoryDao = database.categoryDao()
-    private val productDao = database.productDao()
-    private val productRepository = ProductRepositoryImpl(categoryDao, productDao)
-    private val getCategoriesUseCase = GetCategoriesUseCase(productRepository)
-    private val getProductsByCategoryUseCase = GetProductsByCategoryUseCase(productRepository)
-    private val getProductByIdUseCase = GetProductByIdUseCase(productRepository)
-    private val getFeaturedProductsUseCase = GetFeaturedProductsUseCase(productRepository)
-    private val getAllProductsUseCase = GetAllProductsUseCase(productRepository)
     
     private val _categoriesState = MutableStateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<com.example.milsaborestest.domain.model.Category>>> = _categoriesState.asStateFlow()
@@ -71,6 +58,31 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     // Map para relacionar productos con sus categorías (productId -> categoryId)
     private val _productToCategoryMap = MutableStateFlow<Map<String, String>>(emptyMap())
     
+    // Data class para los valores combinados (type-safe)
+    private data class FilterParams(
+        val products: List<Product>,
+        val categoryMap: Map<String, String>,
+        val search: String,
+        val categoryId: String?,
+        val min: Int,
+        val max: Int,
+        val sort: com.example.milsaborestest.presentation.ui.components.SortOption
+    )
+    
+    // Función helper para extraer los valores de forma type-safe
+    private fun extractFilterParams(values: Array<*>): FilterParams {
+        return FilterParams(
+            products = values[0] as? List<Product> ?: emptyList(),
+            categoryMap = values[1] as? Map<String, String> ?: emptyMap(),
+            search = values[2] as? String ?: "",
+            categoryId = values[3] as? String,
+            min = values[4] as? Int ?: 0,
+            max = values[5] as? Int ?: 999999,
+            sort = values[6] as? com.example.milsaborestest.presentation.ui.components.SortOption 
+                ?: com.example.milsaborestest.presentation.ui.components.SortOption.DEFAULT
+        )
+    }
+    
     // Productos filtrados basados en todos los productos
     val filteredProducts: StateFlow<List<Product>> = combine(
         _allProducts,
@@ -81,26 +93,20 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         _maxPrice,
         _sortBy
     ) { values ->
-        val products: List<Product> = values[0] as List<Product>
-        val categoryMap: Map<String, String> = values[1] as Map<String, String>
-        val search: String = values[2] as String
-        val categoryId: String? = values[3] as? String
-        val min: Int = values[4] as Int
-        val max: Int = values[5] as Int
-        val sort: com.example.milsaborestest.presentation.ui.components.SortOption = values[6] as com.example.milsaborestest.presentation.ui.components.SortOption
+        val params = extractFilterParams(values)
         
-        var filtered = products
+        var filtered = params.products
         
         // Aplicar filtro de categoría
-        if (categoryId != null) {
+        if (params.categoryId != null) {
             filtered = filtered.filter { product ->
-                categoryMap[product.id] == categoryId
+                params.categoryMap[product.id] == params.categoryId
             }
         }
         
         // Aplicar búsqueda
-        if (search.isNotBlank()) {
-            val searchLower = search.lowercase()
+        if (params.search.isNotBlank()) {
+            val searchLower = params.search.lowercase()
             filtered = filtered.filter {
                 it.nombre.lowercase().contains(searchLower) ||
                 it.descripcion.lowercase().contains(searchLower) ||
@@ -109,10 +115,10 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
         }
         
         // Aplicar filtro de precio
-        filtered = filtered.filter { it.precio >= min && it.precio <= max }
+        filtered = filtered.filter { it.precio >= params.min && it.precio <= params.max }
         
         // Aplicar ordenamiento
-        filtered = when (sort) {
+        filtered = when (params.sort) {
             com.example.milsaborestest.presentation.ui.components.SortOption.NAME_ASC -> filtered.sortedBy { it.nombre }
             com.example.milsaborestest.presentation.ui.components.SortOption.NAME_DESC -> filtered.sortedByDescending { it.nombre }
             com.example.milsaborestest.presentation.ui.components.SortOption.PRICE_ASC -> filtered.sortedBy { it.precio }
@@ -133,9 +139,14 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadCategories() {
         viewModelScope.launch {
             try {
-                val categories = getCategoriesUseCase()
+                Log.d(Constants.TAG, "ProductViewModel: Cargando categorías desde API...")
+                val categoriesDto = RetrofitInstance.api.getCategories()
+                Log.d(Constants.TAG, "ProductViewModel: Categorías recibidas desde API: ${categoriesDto.size}")
+                val categories = categoriesDto.map { it.toDomain() }
                 _categoriesState.value = UiState.Success(categories)
+                Log.d(Constants.TAG, "ProductViewModel: Categorías cargadas exitosamente: ${categories.size}")
             } catch (e: Exception) {
+                Log.e(Constants.TAG, "ProductViewModel: Error al cargar categorías desde API", e)
                 _categoriesState.value = UiState.Error(e.message ?: "Error desconocido")
             }
         }
@@ -144,9 +155,18 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadFeaturedProducts() {
         viewModelScope.launch {
             try {
-                val products = getFeaturedProductsUseCase()
+                Log.d(Constants.TAG, "ProductViewModel: Cargando productos destacados desde API...")
+                val productsDto = RetrofitInstance.api.getProducts()
+                Log.d(Constants.TAG, "ProductViewModel: Productos recibidos desde API: ${productsDto.size}")
+                // Productos destacados: los 4 primeros con mejor rating
+                val products = productsDto
+                    .map { it.toDomain() }
+                    .sortedByDescending { it.rating }
+                    .take(4)
                 _featuredProductsState.value = UiState.Success(products)
+                Log.d(Constants.TAG, "ProductViewModel: Productos destacados cargados: ${products.size}")
             } catch (e: Exception) {
+                Log.e(Constants.TAG, "ProductViewModel: Error al cargar productos destacados desde API", e)
                 _featuredProductsState.value = UiState.Error(e.message ?: "Error desconocido")
             }
         }
@@ -155,10 +175,15 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun loadProductsByCategory(categoryId: String) {
         viewModelScope.launch {
             try {
+                Log.d(Constants.TAG, "ProductViewModel: Cargando productos por categoría desde API: $categoryId")
                 _productsByCategoryState.value = UiState.Loading
-                val products = getProductsByCategoryUseCase(categoryId)
+                val productsDto = RetrofitInstance.api.getProductsByCategory(categoryId)
+                Log.d(Constants.TAG, "ProductViewModel: Productos recibidos desde API para categoría $categoryId: ${productsDto.size}")
+                val products = productsDto.map { it.toDomain() }
                 _productsByCategoryState.value = UiState.Success(products)
+                Log.d(Constants.TAG, "ProductViewModel: Productos por categoría cargados: ${products.size}")
             } catch (e: Exception) {
+                Log.e(Constants.TAG, "ProductViewModel: Error al cargar productos por categoría desde API", e)
                 _productsByCategoryState.value = UiState.Error(e.message ?: "Error desconocido")
             }
         }
@@ -167,14 +192,15 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun loadProductById(productId: String) {
         viewModelScope.launch {
             try {
+                Log.d(Constants.TAG, "ProductViewModel: Cargando producto por ID desde API: $productId")
                 _productDetailState.value = UiState.Loading
-                val product = getProductByIdUseCase(productId)
-                if (product != null) {
-                    _productDetailState.value = UiState.Success(product)
-                } else {
-                    _productDetailState.value = UiState.Error("Producto no encontrado")
-                }
+                val productDto = RetrofitInstance.api.getProductById(productId)
+                Log.d(Constants.TAG, "ProductViewModel: Producto recibido desde API: ${productDto.nombre}")
+                val product = productDto.toDomain()
+                _productDetailState.value = UiState.Success(product)
+                Log.d(Constants.TAG, "ProductViewModel: Producto cargado exitosamente: ${product.nombre}")
             } catch (e: Exception) {
+                Log.e(Constants.TAG, "ProductViewModel: Error al cargar producto por ID desde API", e)
                 _productDetailState.value = UiState.Error(e.message ?: "Error desconocido")
             }
         }
@@ -183,8 +209,12 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     private fun loadAllProducts() {
         viewModelScope.launch {
             try {
-                val products = getAllProductsUseCase()
+                Log.d(Constants.TAG, "ProductViewModel: Cargando todos los productos desde API...")
+                val productsDto = RetrofitInstance.api.getProducts()
+                Log.d(Constants.TAG, "ProductViewModel: Productos recibidos desde API: ${productsDto.size}")
+                val products = productsDto.map { it.toDomain() }
                 _allProducts.value = products
+                Log.d(Constants.TAG, "ProductViewModel: Todos los productos cargados: ${products.size}")
                 
                 // Calcular rango de precios
                 if (products.isNotEmpty()) {
@@ -202,19 +232,16 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
                     }
                 }
                 
-                // Construir el mapa de producto a categoría
+                // Construir el mapa de producto a categoría desde los DTOs
                 val categoryMap = mutableMapOf<String, String>()
-                val categories = getCategoriesUseCase()
-                
-                categories.forEach { category ->
-                    val productsInCategory = getProductsByCategoryUseCase(category.id)
-                    productsInCategory.forEach { product ->
-                        categoryMap[product.id] = category.id
-                    }
+                productsDto.forEach { productDto ->
+                    categoryMap[productDto.id] = productDto.categoryId
                 }
                 
                 _productToCategoryMap.value = categoryMap
+                Log.d(Constants.TAG, "ProductViewModel: Mapa de categorías construido: ${categoryMap.size} productos")
             } catch (e: Exception) {
+                Log.e(Constants.TAG, "ProductViewModel: Error al cargar todos los productos desde API", e)
                 // Error silencioso - los productos se cargarán más tarde
             }
         }

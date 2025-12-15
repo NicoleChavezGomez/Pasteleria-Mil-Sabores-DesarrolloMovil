@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
         CategoryEntity::class,
         ProductEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,18 +30,18 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase {
             if (database == null) {
                 database = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "milsabores_database"
-                )
+                            context.applicationContext,
+                            AppDatabase::class.java,
+                            "milsabores_database"
+                        )
                 .fallbackToDestructiveMigration() // Eliminar la base de datos al cambiar la versión
-                .build()
-                
-                // Insertar datos por defecto después de construir la base de datos
-                CoroutineScope(Dispatchers.IO).launch {
+                        .build()
+                        
+                        // Insertar datos por defecto después de construir la base de datos
+                        CoroutineScope(Dispatchers.IO).launch {
                     insertarDatosPorDefecto(database!!, context.applicationContext)
-                }
-            }
+                        }
+                    }
             return database!!
         }
         
@@ -53,25 +53,25 @@ abstract class AppDatabase : RoomDatabase() {
             // Verificar si ya existen usuarios para no duplicar
             val usuariosExistentes = userDao.obtenerTodos()
             if (usuariosExistentes.isEmpty()) {
-                val usuarios = listOf(
-                    UserEntity(
-                        nombre = "Admin Mil Sabores",
-                        email = "admin@milsabores.com",
-                        contrasena = "123456"
-                    ),
-                    UserEntity(
-                        nombre = "Cliente Demo",
-                        email = "cliente@milsabores.com",
-                        contrasena = "123456"
-                    ),
-                    UserEntity(
-                        nombre = "Usuario Test",
-                        email = "test@milsabores.com",
-                        contrasena = "123456"
-                    )
+            val usuarios = listOf(
+                UserEntity(
+                    nombre = "Admin Mil Sabores",
+                    email = "admin@milsabores.com",
+                    contrasena = "123456"
+                ),
+                UserEntity(
+                    nombre = "Cliente Demo",
+                    email = "cliente@milsabores.com",
+                    contrasena = "123456"
+                ),
+                UserEntity(
+                    nombre = "Usuario Test",
+                    email = "test@milsabores.com",
+                    contrasena = "123456"
                 )
-                
-                usuarios.forEach { userDao.insertar(it) }
+            )
+            
+            usuarios.forEach { userDao.insertar(it) }
             }
             
             // Verificar si ya existen categorías para no duplicar

@@ -11,3 +11,29 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Local configuration files
+local.properties
+
+# Generated files
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Release files
+app/release/
+*/release/
